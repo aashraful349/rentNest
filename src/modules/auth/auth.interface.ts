@@ -9,3 +9,8 @@ export type RegisterUserPayload = {
     phone?:string,
     role?:Role,
 }
+
+export type LoginUserPayload = {
+    email:string,
+    password:string,
+}
