@@ -1,18 +1,25 @@
 import { NextFunction, Request, RequestHandler, Response } from "express"
 import { catchAsync } from "../../utility/catchAsync"
 import sendResponse from "../../utility/sendResponse";
+import { authService } from "./auth.service";
+import httpStatus from "http-status";
 
 
 
 const registerUser=
     catchAsync(async(req:Request,res:Response,next:NextFunction)=>{
-        const {name,email,password}=req.body;
-        console.log("User registration data:", { name, email, password });
+        const payload=req.body;
+
+        const result= await authService.registerUserDB(payload);
+        // console.log("result",result)
+
         sendResponse(res,{
             success:true,
-            status:200,
+            status:httpStatus.OK,
             message:"User registered successfully",
+            data:result
         })
+
     })
 
 

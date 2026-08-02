@@ -6,4 +6,5 @@ enum ActiveStatus{
 enum Role{
     TENANT
     LANDLORD
+    ADMIN
 }
