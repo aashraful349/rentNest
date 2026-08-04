@@ -5,6 +5,9 @@ import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
 import cors from "cors";
 import config from "./config";
+import { landLordRoute } from "./modules/landLord/landLord.route";
+import { propertiesRoute } from "./modules/properties/properties.route";
+import { categoriesRoute } from "./modules/categories/categories.route";
 
 const app:Application = express();
 
@@ -25,7 +28,11 @@ app.get("/",(req:Request,res:Response)=>{
 
 app.use("/api/auth",authRoutes);
 
+app.use("/api/landlord",landLordRoute);
 
+app.use("/api/properties",propertiesRoute);
+
+app.use("/api/categories",categoriesRoute);
 
 
 

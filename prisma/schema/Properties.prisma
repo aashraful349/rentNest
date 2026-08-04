@@ -1,0 +1,20 @@
+
+
+model Property{
+id String @id @default(uuid())
+landLordId String
+user User @relation(fields: [landLordId], references: [id],onDelete: Cascade)
+pName String @db.VarChar(255)
+pLocation String @db.VarChar(255)
+pPrice Decimal @db.Decimal(10,2)
+pDescription String 
+pImage String? @db.VarChar(255)
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+
+category Category?
+
+@@map("properties")
+
+}

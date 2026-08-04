@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { authController } from "./auth.controller";
+import { auth } from "../../middleware/auth";
 
 
 const router=Router();
 
 router.post("/register",authController.registerUser);
 router.post("/login",authController.loginUser);
+router.get("/me",auth("TENANT","LANDLORD","ADMIN"),authController.getMe)
 
 
 export const authRoutes=router;

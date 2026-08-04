@@ -8,3 +8,14 @@ enum Role{
     LANDLORD
     ADMIN
 }
+
+enum PType{
+    APARTMENT
+    HOUSE
+    STUDIO
+    OFFICE
+    SHOP
+    WAREHOUSE
+    LAND
+    OTHER
+}

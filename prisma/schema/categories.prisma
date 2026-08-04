@@ -1,0 +1,16 @@
+
+
+model Category{
+    id String @id @default(uuid())
+    pId String @unique
+    property Property @relation(fields: [pId], references: [id],onDelete:Cascade)
+
+    type PType @default(OTHER)
+    description String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([pId])
+    @@map("categories")
+}

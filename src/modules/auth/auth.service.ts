@@ -88,36 +88,60 @@ const loginUserFromDB = async (payload: LoginUserPayload) => {
     throw new Error("User is blocked. Please contact support.");
   }
 
+  const didPasswordMatch = await bcrypt.compare(password, user.hashedPassword);
 
-  const didPasswordMatch=await bcrypt.compare(password,user.hashedPassword)
-
-  if(!didPasswordMatch){
-    throw new Error("Invalid credentials. Please check your email and password.");
+  if (!didPasswordMatch) {
+    throw new Error(
+      "Invalid credentials. Please check your email and password.",
+    );
   }
 
+  const jwtPayload = {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+  const jwtAccessSecret = config.jwt_access_secret as string;
+  const jwtRefreshSecret = config.jwt_refresh_secret as string;
 
-  const jwtPayload={
-    userId:user.id,
-    name:user.name,
-    email:user.email,
-    role:user.role,
-  }
-  const jwtAccessSecret=config.jwt_access_secret as string;
-  const jwtRefreshSecret=config.jwt_refresh_secret as string;
+  const accessToken = jwtUtils.createToken(jwtPayload, jwtAccessSecret, {
+    expiresIn: "1d",
+  });
 
-  const accessToken=jwtUtils.createToken(jwtPayload,jwtAccessSecret,{expiresIn:"1d"})
+  const refreshToken = jwtUtils.createToken(jwtPayload, jwtRefreshSecret, {
+    expiresIn: "7d",
+  });
 
-  const refreshToken=jwtUtils.createToken(jwtPayload,jwtRefreshSecret,{expiresIn:"7d"})
-
-
-// console.log("accessToken:",accessToken)
-// console.log("refreshToken:",refreshToken)
-
+  // console.log("accessToken:",accessToken)
+  // console.log("refreshToken:",refreshToken)
 
   return { accessToken, refreshToken };
+};
+
+const getMeFromDB = async (userId: string) => {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      bio: true,
+      phone: true,
+      role: true,
+      activeStatus: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return user;
 };
 
 export const authService = {
   registerUserDB,
   loginUserFromDB,
+  getMeFromDB,
 };
