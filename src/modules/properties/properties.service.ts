@@ -63,6 +63,7 @@ const getPropertyByIdFromDB = async (id:string) => {
 
 
 
+
 export const propertiesService = {
   getAllPropertiesFromDB,
     getPropertyByIdFromDB,

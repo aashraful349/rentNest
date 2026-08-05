@@ -1,6 +1,7 @@
+import { Request } from "express";
 import { PType } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
-import { CreatePropertyPayload } from "./landLord.interface";
+import { CreatePropertyPayload, updatePropertyPayload } from "./landLord.interface";
 
 const createPropertyIntoDB = async (
   payload: CreatePropertyPayload,
@@ -50,11 +51,85 @@ const createPropertyIntoDB = async (
   return result;
 };
 
-const updatePropertyIntoDB=()=>{
+const updatePropertyInDB=async(req:Request,id:string,payload:updatePropertyPayload)=>{
+  // console.log("id:",id)
+  // console.log("payload:",payload)
 
+  const landLordId=await prisma.property.findUniqueOrThrow({
+    where:{
+      id
+    },
+    select:{
+      landLordId:true
+    }
+  })
+
+  // console.log(landLordId.landLordId)
+  
+  if(landLordId.landLordId != req.user?.userId){
+    throw new Error("You are not the owner of this property.So, you are not authorized to update this property.");
+  }
+
+  const{pName,pLocation,pPrice,pDescription,pImage,type,description}=payload;
+
+    const currentProperty=await prisma.property.findUniqueOrThrow({
+    where:{
+      id
+    },
+    include:{
+      category:true
+    }
+  })
+
+  const result=await prisma.property.update({
+    where:{
+      id
+    },
+    data:{
+      pName:pName?pName:currentProperty.pName,
+      pLocation:pLocation?pLocation:currentProperty.pLocation,
+      pPrice:pPrice?pPrice:currentProperty.pPrice,
+      pDescription:pDescription?pDescription:currentProperty.pDescription,
+      pImage:pImage?pImage:currentProperty.pImage,
+      category:{
+        update:{
+          type:type?type:currentProperty.category?.type,
+          description:description?description:currentProperty.category?.description
+        }
+      }
+    },
+    select:{
+      id:true,
+      landLordId:true,
+      pName:true,
+      pLocation:true,
+      pPrice:true,
+      pDescription:true,
+      pImage:true,
+      category:{
+        select:{
+          id:true,
+          type:true,
+          description:true
+        }
+      }
+    }
+  })
+
+  return result;
+
+}
+
+const deletePropertyFromDB=async(id:string)=>{
+  await prisma.property.delete({
+    where:{
+      id
+    }
+  })
 }
 
 export const landLordService = {
   createPropertyIntoDB,
-  updatePropertyIntoDB
+  updatePropertyInDB,
+  deletePropertyFromDB
 };

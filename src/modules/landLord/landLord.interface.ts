@@ -9,3 +9,13 @@ export type CreatePropertyPayload = {
   type :PType;
   description?:string;
 };
+
+export type updatePropertyPayload = {
+  pName?: string;
+  pLocation?: string;
+  pPrice?: number;
+  pDescription?: string;
+  pImage?: string;
+  type ?:PType;
+  description?:string;
+};
