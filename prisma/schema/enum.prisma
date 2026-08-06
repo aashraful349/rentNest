@@ -1,21 +1,27 @@
-enum ActiveStatus{
-    ACTIVE
-    BLOCKED
+enum ActiveStatus {
+  ACTIVE
+  BLOCKED
 }
 
-enum Role{
-    TENANT
-    LANDLORD
-    ADMIN
+enum Role {
+  TENANT
+  LANDLORD
+  ADMIN
 }
 
-enum PType{
-    APARTMENT
-    HOUSE
-    STUDIO
-    OFFICE
-    SHOP
-    WAREHOUSE
-    LAND
-    OTHER
+enum PType {
+  APARTMENT
+  HOUSE
+  STUDIO
+  OFFICE
+  SHOP
+  WAREHOUSE
+  LAND
+  OTHER
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
 }

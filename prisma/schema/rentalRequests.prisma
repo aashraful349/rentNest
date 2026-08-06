@@ -1,0 +1,17 @@
+model rentalRequest {
+  id         String @id @default(uuid())
+  propertyId String
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  tenantId String
+  user     User   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  message String?
+
+  status    Status   @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("rental_requests")
+}

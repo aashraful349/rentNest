@@ -1,18 +1,18 @@
-model User{
-    id String @id @default(uuid())
-    name String @db.VarChar(255)
-    email String @unique @db.VarChar(255)
-    hashedPassword String 
-    image String? @db.VarChar(255)
-    bio String?
-    phone String? @db.VarChar(25)
-    activeStatus ActiveStatus? @default(ACTIVE)
-    role Role @default(TENANT)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model User {
+  id             String        @id @default(uuid())
+  name           String        @db.VarChar(255)
+  email          String        @unique @db.VarChar(255)
+  hashedPassword String
+  image          String?       @db.VarChar(255)
+  bio            String?
+  phone          String?       @db.VarChar(25)
+  activeStatus   ActiveStatus? @default(ACTIVE)
+  role           Role          @default(TENANT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
+  Property      Property[]
+  rentalRequest rentalRequest[]
 
-    Property Property[]
-
-    @@map("users")
+  @@map("users")
 }
