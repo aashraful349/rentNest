@@ -13,5 +13,7 @@ model rentalRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  payment Payment?
+
   @@map("rental_requests")
 }

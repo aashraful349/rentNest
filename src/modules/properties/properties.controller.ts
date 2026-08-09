@@ -41,6 +41,7 @@ const getPropertyById=catchAsync(async(req:Request,res:Response,next:NextFunctio
 })
 
 
+
 export const propertiesController={
     getAllProperties,
     getPropertyById

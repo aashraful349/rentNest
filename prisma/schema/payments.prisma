@@ -1,1 +1,17 @@
+model Payment {
+  id     String @id @default(uuid())
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
+  rentalRequestId String        @unique
+  rentalRequest   rentalRequest @relation(fields: [rentalRequestId], references: [id])
+
+  status PaymentStatus @default(PENDING)
+
+  stripeCustomerId String @unique
+  stripePaymentId  String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

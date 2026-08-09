@@ -25,3 +25,9 @@ enum Status {
   APPROVED
   REJECTED
 }
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}

@@ -9,7 +9,8 @@ const config={
     app_url:process.env.APP_URL,
     bcrypt_salt_rounds:process.env.BCRYPT_SALT_ROUNDS || 10,
     jwt_access_secret:process.env.JWT_ACCESS_SECRET,
-    jwt_refresh_secret:process.env.JWT_REFRESH_SECRET
+    jwt_refresh_secret:process.env.JWT_REFRESH_SECRET,
+    stripe_secret_key:process.env.STRIPE_SECRET_KEY
 }
 
 export default config;
