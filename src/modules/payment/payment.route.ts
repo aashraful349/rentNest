@@ -9,4 +9,6 @@ const router=Router();
 router.post("/create",auth("TENANT"),paymentController.createPaymentSession);
 
 
+router.post("/webhook",paymentController.handleWebhook)
+
 export const paymentRoute=router;

@@ -1,6 +1,7 @@
 import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
+import { handleCheckoutCompleted } from "./payment.utils";
 
 const createPaymentSession = async (
   userId: string,
@@ -73,14 +74,52 @@ const createPaymentSession = async (
         rentalRequestId,
         tenantId: rentalRequest.user.id,
       },
+      customer: stripeCustomerId,
       success_url: `${config.app_url}/payment?success=true`,
       cancel_url: `${config.app_url}/payment?success=false`,
     });
     return session.url;
   });
-  console.log("transactionResult:", transactionResult);
+  // console.log("transactionResult:", transactionResult);
+  return{
+    paymentUrl: transactionResult
+  }
 };
+
+
+
+const handleWebhook=async(payload:Buffer,signature:string)=>{
+  const endpointSecret = config.stripe_webhook_secret;
+  const event = stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        endpointSecret
+      );
+
+        console.log("event after try block:", event);
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      await handleCheckoutCompleted(event.data.object);
+      break;
+    case 'payment_method.attached':
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    default:
+      // Unexpected event type
+      console.log(`Unhandled event type ${event.type}.`);
+  }
+}
+
+
+
+
+
 
 export const paymentService = {
   createPaymentSession,
+  handleWebhook
 };
