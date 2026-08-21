@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { catchAsync } from "../../utility/catchAsync";
 import { paymentService } from "./payment.service";
 import sendResponse from "../../utility/sendResponse";
+import { send } from "node:process";
 
 const createPaymentSession = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +41,42 @@ const handleWebhook = catchAsync(
   },
 );
 
+
+
+const getPaymentHistory=catchAsync(async (req: Request, res: Response, next: NextFunction)=>{
+  const id=req.user?.userId as string;
+  const result=await paymentService.getPaymentHistoryFromDB(id);
+
+  sendResponse(res,{
+    success:true,
+    status:200,
+    message:"Payment history fetched successfully",
+    data:result
+  })
+  
+})
+
+
+const getPaymentDetailsById=catchAsync(async (req: Request, res: Response, next: NextFunction)=>{
+
+  const paymentID=req.params.id as string;
+  const userId=req.user?.userId as string;
+
+  const result=await paymentService.getPaymentDetailsByIdFromDB(userId,paymentID);
+
+  // console.log(result)
+  sendResponse(res,{
+    success:true,
+    status:200,
+    message:"Payment details fetched successfully",
+    data:result
+  })
+
+})
+
 export const paymentController = {
   createPaymentSession,
   handleWebhook,
+  getPaymentHistory,
+  getPaymentDetailsById
 };

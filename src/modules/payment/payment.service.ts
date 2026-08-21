@@ -1,3 +1,4 @@
+import { get } from "node:http";
 import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
@@ -96,17 +97,12 @@ const handleWebhook=async(payload:Buffer,signature:string)=>{
         endpointSecret
       );
 
-        console.log("event after try block:", event);
+      // console.log("event after try block:", event);
 
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
       await handleCheckoutCompleted(event.data.object);
-      break;
-    case 'payment_method.attached':
-      const paymentMethod = event.data.object;
-      // Then define and call a method to handle the successful attachment of a PaymentMethod.
-      // handlePaymentMethodAttached(paymentMethod);
       break;
     default:
       // Unexpected event type
@@ -116,10 +112,75 @@ const handleWebhook=async(payload:Buffer,signature:string)=>{
 
 
 
+const getPaymentHistoryFromDB=async(id:string)=>{
+  const result= await prisma.payment.findMany({
+    where: {
+      userId: id
+    },
+    select:{
+      id:true,
+      amount:true,
+      status:true,
+      createdAt:true,
+    },
+    orderBy:{
+      createdAt:"desc"
+    }
+  })
+
+  // console.log("payment history result:",result)
+
+  return result;
+
+
+}
+
+const getPaymentDetailsByIdFromDB=async(userId:string,paymentID:string)=>{
+  // console.log("userId:",userId,"paymentID:",paymentID)
+
+  const result=await prisma.payment.findUniqueOrThrow({
+    where:{
+      id:paymentID
+    },
+
+    include:{
+      user:{
+        select:{
+          id:true,
+          name:true,
+          email:true
+        }
+      },
+      rentalRequest:{
+        select:{
+          id:true,
+          status:true,
+          property:{
+            select:{
+              id:true,
+              pName:true,
+              pLocation:true,
+              pPrice:true
+            }
+          }
+        }
+      }
+    }
+
+  })
+
+  return result;
+
+}
+
+
+
 
 
 
 export const paymentService = {
   createPaymentSession,
-  handleWebhook
+  handleWebhook,
+  getPaymentHistoryFromDB,
+  getPaymentDetailsByIdFromDB
 };

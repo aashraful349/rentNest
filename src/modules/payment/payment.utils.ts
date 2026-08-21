@@ -12,6 +12,10 @@ export const handleCheckoutCompleted = async (
   const stripeCustomerId = session.customer as string;
   const stripePaymentId = session.payment_intent as string;
 
+  const amount = session.amount_total as number /100;
+
+  // console.log(session)
+
   //   console.log("userId:", userId, "rentalRequestId:", rentalRequestId, "propertyId:", propertyId, "stripeCustomerId:", stripeCustomerId, "stripePaymentIntentId:", stripePaymentIntentId);
 
   await prisma.payment.upsert({
@@ -23,13 +27,15 @@ export const handleCheckoutCompleted = async (
       rentalRequestId,
       stripeCustomerId,
       stripePaymentId,
+      amount,
       status: "COMPLETED",
     },
     update: {
       rentalRequestId,
       stripeCustomerId,
       stripePaymentId,
-      status: "COMPLETED",
+      amount,
+      status: "COMPLETED", 
     },
   });
 };
