@@ -1,5 +1,7 @@
 import Stripe from "stripe";
 import { prisma } from "../../lib/prisma";
+import { Request } from "express" ;
+
 
 export const handleCheckoutCompleted = async (
   session: Stripe.Checkout.Session,
@@ -39,3 +41,4 @@ export const handleCheckoutCompleted = async (
     },
   });
 };
+

@@ -1,6 +1,6 @@
 model Payment {
-  id     String @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
@@ -9,7 +9,7 @@ model Payment {
 
   status PaymentStatus @default(PENDING)
 
-  stripeCustomerId String @unique
+  stripeCustomerId String
   stripePaymentId  String @unique
 
   amount Float

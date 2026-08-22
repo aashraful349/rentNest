@@ -12,6 +12,7 @@ model Property {
 
   category      Category?
   rentalRequest rentalRequest[]
+  review        Review[]
 
   @@map("properties")
 }
