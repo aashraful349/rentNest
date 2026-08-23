@@ -71,7 +71,6 @@ const getPaymentDetailsById=catchAsync(async (req: Request, res: Response, next:
     message:"Payment details fetched successfully",
     data:result
   })
-
 })
 
 export const paymentController = {

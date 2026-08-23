@@ -12,6 +12,7 @@ import { rentalRequestRoute } from "./rentalRequest/rentalRequest.route";
 import { paymentRoute } from "./modules/payment/payment.route";
 import { stripe } from "./lib/stripe";
 import { reviewRoute } from "./modules/reviews/reviews.route";
+import { adminRoute } from "./modules/admin/admin.routes";
 
 const app:Application = express();
 
@@ -46,6 +47,8 @@ app.use("/api/rentals",rentalRequestRoute);
 app.use("/api/payments",paymentRoute);
 
 app.use("/api/reviews",reviewRoute);
+
+app.use("/api/admin",adminRoute);
 
 
 

@@ -39,8 +39,9 @@ const updateProperty=catchAsync(async(req:Request,res:Response,next:NextFunction
 
 const deleteProperty=catchAsync(async(req:Request,res:Response,next:NextFunction)=>{
 
+    const userId=req.user?.userId as string;
     const id=req.params?.id as string;
-    await landLordService.deletePropertyFromDB(id);
+    await landLordService.deletePropertyFromDB(userId,id);
 
     sendResponse(res,{
         success:true,

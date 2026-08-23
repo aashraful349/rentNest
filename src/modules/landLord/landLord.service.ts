@@ -133,7 +133,21 @@ const updatePropertyInDB = async (
   return result;
 };
 
-const deletePropertyFromDB = async (id: string) => {
+const deletePropertyFromDB = async (userId: string, id: string) => {
+  const result=await prisma.property.findUniqueOrThrow({
+    where: {
+      id,
+    },
+    select: {
+      landLordId: true,
+    },
+  });
+
+  if (result.landLordId !== userId) {
+    throw new Error(
+      "You are not the owner of this property. So, you are not authorized to delete this property.",
+    );
+  }  
   await prisma.property.delete({
     where: {
       id,
