@@ -1,5 +1,7 @@
 import { ActiveStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 
 
 
@@ -18,7 +20,7 @@ const getAllUsers=async()=>{
     // console.log("result:",result)
 
     if(result.length===0){
-        throw new Error("No users found");
+        throw new AppError("No users found", httpStatus.NOT_FOUND);
     }
     // console.log("result:",result)
 
@@ -64,7 +66,7 @@ const getAllProperties=async()=>{
     })
 
     if(result.length===0){
-        throw new Error("No properties found");
+        throw new AppError("No properties found", httpStatus.NOT_FOUND);
     }
 
     return result;
@@ -84,7 +86,7 @@ const getAllRentalRequests=async()=>{
     })
 
     if(result.length===0){
-        throw new Error("No rental requests found");
+        throw new AppError("No rental requests found", httpStatus.NOT_FOUND);
     }
 
     return result;

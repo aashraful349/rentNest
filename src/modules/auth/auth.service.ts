@@ -5,6 +5,8 @@ import config from "../../config";
 import { ActiveStatus, Role } from "../../../generated/prisma/enums";
 import jwt from "jsonwebtoken";
 import { jwtUtils } from "../../utility/jwtUtils";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 
 const registerUserDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, image, bio, phone, role } = payload;
@@ -17,8 +19,9 @@ const registerUserDB = async (payload: RegisterUserPayload) => {
     !normalizedRole ||
     !allowedRoles.includes(normalizedRole)
   ) {
-    throw new Error(
+    throw new AppError(
       "Invalid role provided. Role must be TENANT, tenant, LANDLORD or landlord.",
+      httpStatus.BAD_REQUEST
     );
   }
 
@@ -28,7 +31,7 @@ const registerUserDB = async (payload: RegisterUserPayload) => {
     },
   });
   if (doesUserExist) {
-    throw new Error("User already exists with this email");
+    throw new AppError("User already exists with this email", httpStatus.CONFLICT);
   }
 
   const hashedPassword = await bcrypt.hash(
@@ -85,14 +88,15 @@ const loginUserFromDB = async (payload: LoginUserPayload) => {
   //   console.log("user:",user)
 
   if (user.activeStatus === ActiveStatus.BLOCKED) {
-    throw new Error("User is blocked. Please contact support.");
+    throw new AppError("User is blocked. Please contact support.", httpStatus.FORBIDDEN);
   }
 
   const didPasswordMatch = await bcrypt.compare(password, user.hashedPassword);
 
   if (!didPasswordMatch) {
-    throw new Error(
+    throw new AppError(
       "Invalid credentials. Please check your email and password.",
+      httpStatus.UNAUTHORIZED
     );
   }
 

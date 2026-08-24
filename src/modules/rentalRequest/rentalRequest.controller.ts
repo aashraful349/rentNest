@@ -1,13 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import { catchAsync } from "../utility/catchAsync";
+import { catchAsync } from "../../utility/catchAsync";
 import { rentalRequestService } from "./rentalRequest.service";
-import sendResponse from "../utility/sendResponse";
+import sendResponse from "../../utility/sendResponse";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 
 const createRentalRequest = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const tenantId = req.user?.userId as string;
     if (!tenantId) {
-      throw new Error("Tenant Id not found");
+      throw new AppError("Tenant Id not found", httpStatus.NOT_FOUND);
     }
     const payload = req.body;
     const result = await rentalRequestService.createRentalRequestInDB(
@@ -25,10 +27,15 @@ const createRentalRequest = catchAsync(
   },
 );
 
-
 const getAllRentalRequests = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const result=await rentalRequestService.getAllRentalRequestsFromDB();
+    const userId = req.user?.userId as string;
+    if (!userId) {
+      throw new AppError("User Id not found..Please login first", httpStatus.UNAUTHORIZED);
+    }
+
+    const result =
+      await rentalRequestService.getAllRentalRequestsFromDB(userId);
 
     // console.log("result:",result)
     sendResponse(res, {
@@ -42,8 +49,16 @@ const getAllRentalRequests = catchAsync(
 
 const getRentalRequestById = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const id=req.params?.id as string;
-    const result=await rentalRequestService.getRentalRequestByIdFromDB(id);
+    const id = req.params?.id as string;
+    const userId = req.user?.userId as string;
+    if (!userId) {
+      throw new AppError("User Id not found..Please login first", httpStatus.UNAUTHORIZED);
+    }
+
+    const result = await rentalRequestService.getRentalRequestByIdFromDB(
+      userId,
+      id,
+    );
 
     // console.log("result:",result)
     sendResponse(res, {
@@ -55,10 +70,8 @@ const getRentalRequestById = catchAsync(
   },
 );
 
-
-
 export const rentalRequestController = {
   createRentalRequest,
-  getAllRentalRequests  ,
-    getRentalRequestById
+  getAllRentalRequests,
+  getRentalRequestById,
 };

@@ -1,5 +1,7 @@
 import { prisma } from "../../lib/prisma";
-import { IReview } from "./reviews.interface"
+import { AppError } from "../../utility/AppError";
+import { IReview } from "./reviews.interface";
+import httpStatus from "http-status";
 
 
 
@@ -23,17 +25,17 @@ const createReview=async(payload:IReview,userId:string)=>{
     })
 
     if(!payment){
-        throw new Error("Payment not found for this rental request");
+        throw new AppError("Payment not found for this rental request", httpStatus.NOT_FOUND);
     }
 
     // console.log(payment.userId,userId)
 
     if(payment.userId!==userId){
-        throw new Error("You are not authorized to create review for this rental request");
+        throw new AppError("You are not authorized to create review for this rental request", httpStatus.FORBIDDEN);
     }
 
     if(payment.status!=="COMPLETED"){
-        throw new Error("Payment is not completed for this rental request");
+        throw new AppError("Payment is not completed for this rental request", httpStatus.BAD_REQUEST);
     }
 
     // if(payment.userId!==userId){
@@ -50,7 +52,7 @@ const createReview=async(payload:IReview,userId:string)=>{
     })
 
     if(reviewExists){
-        throw new Error("You have already created a review for this rental request");
+        throw new AppError("You have already created a review for this rental request", httpStatus.BAD_REQUEST);
     }
 
     const result=await prisma.review.create({
@@ -88,8 +90,8 @@ const getAllReviewsByPropertyId=async(propertyId:string)=>{
     })
     console.log("result:",result)
 
-    if(!result[0]){
-        throw new Error("No reviews found for this property");
+    if(!result[0]){   
+        throw new AppError("No reviews found for this property", httpStatus.NOT_FOUND);
     }
 
     return result;

@@ -3,6 +3,7 @@ import { catchAsync } from "../../utility/catchAsync";
 import { adminService } from "./admin.service";
 import sendResponse from "../../utility/sendResponse";
 import { ActiveStatus } from "../../../generated/prisma/enums";
+import httpStatus from "http-status";
 
 
 
@@ -14,7 +15,7 @@ const getAllUsers=catchAsync(async(req:Request,res:Response,next:NextFunction)=>
     // console.log("result:",result)
     sendResponse(res,{
         success:true,
-        status:200,
+        status:httpStatus.OK,
         message:"Users fetched successfully",
         data:result
     })
@@ -41,7 +42,7 @@ const getAllProperties=catchAsync(async(req:Request,res:Response,next:NextFuncti
     const result=await adminService.getAllProperties();
     sendResponse(res,{
         success:true,
-        status:200,
+        status:httpStatus.OK,
         message:"Properties fetched successfully",
         data:result
     })
@@ -51,7 +52,7 @@ const getAllRentalRequests=catchAsync(async(req:Request,res:Response,next:NextFu
     const result=await adminService.getAllRentalRequests();
     sendResponse(res,{
         success:true,
-        status:200,
+        status:httpStatus.OK,
         message:"Rental requests fetched successfully",
         data:result
     })

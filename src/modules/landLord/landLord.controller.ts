@@ -3,7 +3,8 @@ import { catchAsync } from "../../utility/catchAsync";
 import { landLordService } from "./landLord.service";
 import sendResponse from "../../utility/sendResponse";
 import { Status } from "../../../generated/prisma/enums";
-
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 
 
 
@@ -72,9 +73,12 @@ const approveOrRejectRentalRequest=catchAsync(async(req:Request,res:Response,nex
     const rentalRequestId=req.params?.id as string;
     const payload=req.body.status as Status;
 
+    const userId=req.user?.userId as string;
+
     if(payload!=="APPROVED" && payload!=="REJECTED"){
-        throw new Error("Invalid status value. Must be 'APPROVED' or 'REJECTED'.");
+        throw new AppError("Invalid status value. Must be 'APPROVED' or 'REJECTED'.", httpStatus.BAD_REQUEST);
     }
+
 
     // if(){
     //     throw new Error("Invalid status value. Must be 'APPROVED' or 'REJECTED'.");
@@ -87,7 +91,7 @@ const approveOrRejectRentalRequest=catchAsync(async(req:Request,res:Response,nex
     // }
     // console.log(payload);
 
-    const result=await landLordService.approveOrRejectRentalRequestInDB(rentalRequestId,payload);
+    const result=await landLordService.approveOrRejectRentalRequestInDB(userId,rentalRequestId,payload);
 
     // console.log("result:",result)
 

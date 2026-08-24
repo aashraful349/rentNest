@@ -5,6 +5,8 @@ import {
   CreatePropertyPayload,
   updatePropertyPayload,
 } from "./landLord.interface";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 
 const createPropertyIntoDB = async (
   payload: CreatePropertyPayload,
@@ -16,8 +18,9 @@ const createPropertyIntoDB = async (
   const normalizedType = type?.trim().toUpperCase() as PType;
   const pType = Object.values(PType);
   if (!pType.includes(normalizedType)) {
-    throw new Error(
+    throw new AppError(
       "Invalid property type provided. Type must be APARTMENT or apartment, HOUSE or house, STUDIO or studio, OFFICE or office, SHOP or shop, WAREHOUSE or warehouse, LAND or land, OTHER or other and if you are not sure just leave blank.",
+      httpStatus.BAD_REQUEST
     );
   }
 
@@ -76,8 +79,9 @@ const updatePropertyInDB = async (
   // console.log(landLordId.landLordId)
 
   if (landLordId.landLordId != req.user?.userId) {
-    throw new Error(
+    throw new AppError(
       "You are not the owner of this property.So, you are not authorized to update this property.",
+      httpStatus.FORBIDDEN
     );
   }
 
@@ -144,8 +148,9 @@ const deletePropertyFromDB = async (userId: string, id: string) => {
   });
 
   if (result.landLordId !== userId) {
-    throw new Error(
+    throw new AppError(
       "You are not the owner of this property. So, you are not authorized to delete this property.",
+      httpStatus.FORBIDDEN
     );
   }  
   await prisma.property.delete({
@@ -183,10 +188,28 @@ const rentalRequestsForLandLordsPropertiesFromDB = async (
   return rentalRequests;
 };
 
-const approveOrRejectRentalRequestInDB = async(id:string,payload:Status)=>{
+const approveOrRejectRentalRequestInDB = async(userId:string,rentalRequestId:string,payload:Status)=>{
+
+  const rentalRequest=await prisma.rentalRequest.findUniqueOrThrow({
+    where:{
+      id:rentalRequestId
+    },
+    select:{
+      property:{
+        select:{
+          landLordId:true
+        }
+      }
+    }
+  })
+
+  if(rentalRequest.property.landLordId!==userId){
+    throw new AppError("You are not authorized to approve or reject this rental request as you are not the owner of this property", httpStatus.FORBIDDEN);
+  }
+
   const result=await prisma.rentalRequest.update({
     where:{
-      id
+      id:rentalRequestId
     },
     data:{
       status:payload
