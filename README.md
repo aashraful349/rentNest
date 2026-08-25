@@ -224,7 +224,20 @@ The server listens on `http://localhost:5000` by default. Visit `http://localhos
 | `npm run dev`            | Starts the TypeScript server in watch mode with `tsx`.                 |
 | `npm run build`          | Compiles TypeScript into the `dist` directory.                         |
 | `npm start`              | Starts the compiled application from `dist/server.js`.                 |
-| `npm run stripe:webhook` | Forwards Stripe CLI events to the local webhook endpoint on port 5000. |
+
+### Optional local Stripe webhook script
+
+The Stripe webhook script is intentionally not included in the current `package.json` deployment configuration. If you want to test Stripe webhooks locally, add this entry inside the `scripts` object in `package.json`:
+
+```json
+"stripe:webhook": "stripe listen --forward-to localhost:5000/api/payments/webhook"
+```
+
+Then run:
+
+```bash
+npm run stripe:webhook
+```
 
 ## Environment variables
 
@@ -527,22 +540,19 @@ GET /api/properties?location=dhaka
 GET /api/properties?price=25000&type=APARTMENT
 ```
 
-Each property includes its category:
+For the property-list endpoint, each item contains summary data only: `id`, `pName`, `pLocation`, `pPrice`, `createdAt`, and the category's `id` and `type`. It intentionally does not return the landlord ID, property description, image, or category description. Use `GET /api/properties/:id` to retrieve the full property record.
 
 ```json
 {
   "id": "property-uuid",
-  "landLordId": "landlord-uuid",
   "pName": "Lakeview Apartment",
   "pLocation": "Gulshan, Dhaka",
   "pPrice": "25000",
-  "pDescription": "A furnished two-bedroom apartment.",
-  "pImage": "https://example.com/property.jpg",
   "category": {
     "id": "category-uuid",
-    "type": "APARTMENT",
-    "description": "Two-bedroom residential apartment"
-  }
+    "type": "APARTMENT"
+  },
+  "createdAt": "2026-01-01T00:00:00.000Z"
 }
 ```
 
@@ -550,7 +560,7 @@ Each property includes its category:
 
 #### `GET /api/properties/:id`
 
-Returns one property and its category.
+Returns one full property record and its category, including `landLordId`, `pDescription`, `pImage`, category `description`, and timestamps.
 
 **Authentication:** none
 
@@ -813,7 +823,7 @@ On a completed checkout session, the API creates or updates one payment record f
 npm run stripe:webhook
 ```
 
-Copy the displayed webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
+Before running this command, add the optional `stripe:webhook` script shown in [Optional local Stripe webhook script](#optional-local-stripe-webhook-script). It requires the Stripe CLI to be installed and authenticated. Copy the displayed webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 ### Get payment history
 

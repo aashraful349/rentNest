@@ -38,9 +38,20 @@ if (type) {
     where:{
       AND:andConditions
     },
-    include:{
-        category:true,
+    select:{
+      id:true,
+      pName:true,
+      pLocation:true,
+      pPrice:true,
+      category:{
+        select:{
+          id:true,
+          type:true,
+        }
+      },
+      createdAt:true
     }
+    
   });
 
   return result;
