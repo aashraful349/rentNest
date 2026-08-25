@@ -12,7 +12,7 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
  `![RentNest database ER diagram](./rentNestDBERDiagram.webp)`
 
  **Project structure**
-
+```
 .
 ├── generated
 │   └── prisma
@@ -132,6 +132,8 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
 │       ├── sendResponse.ts
 │       └── util.interface.ts
 └── tsconfig.json
+
+```
 
 ## Features
 
