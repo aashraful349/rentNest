@@ -8,15 +8,130 @@ RentNest is a RESTful backend API for a property-rental platform. It supports th
 
 The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authentication, and Stripe Checkout.
 
-> **Project ER diagram**
->
-> Add your database ER diagram here later. For example:
->
-> `![RentNest database ER diagram](./rentNestDBERDiagram.webp)`
+ **Project ER diagram**
+ `![RentNest database ER diagram](./rentNestDBERDiagram.webp)`
 
-> **Project structure**
->
-> Add your project-tree image or tree output here later.
+ **Project structure**
+
+.
+├── generated
+│   └── prisma
+│       ├── browser.ts
+│       ├── client.ts
+│       ├── commonInputTypes.ts
+│       ├── enums.ts
+│       ├── internal
+│       │   ├── class.ts
+│       │   ├── prismaNamespaceBrowser.ts
+│       │   └── prismaNamespace.ts
+│       ├── models
+│       │   ├── Category.ts
+│       │   ├── Payment.ts
+│       │   ├── Property.ts
+│       │   ├── rentalRequest.ts
+│       │   ├── Review.ts
+│       │   └── User.ts
+│       └── models.ts
+├── package.json
+├── package-lock.json
+├── prisma
+│   ├── migrations
+│   │   ├── 20260803070123
+│   │   │   └── migration.sql
+│   │   ├── 20260803091228
+│   │   │   └── migration.sql
+│   │   ├── 20260806064952_rental_request
+│   │   │   └── migration.sql
+│   │   ├── 20260806134829
+│   │   │   └── migration.sql
+│   │   ├── 20260806140610
+│   │   │   └── migration.sql
+│   │   ├── 20260808161614_payment_schema
+│   │   │   └── migration.sql
+│   │   ├── 20260820160931
+│   │   │   └── migration.sql
+│   │   ├── 20260821043411
+│   │   │   └── migration.sql
+│   │   ├── 20260822113930
+│   │   │   └── migration.sql
+│   │   ├── 20260822131330
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   └── schema
+│       ├── categories.prisma
+│       ├── enum.prisma
+│       ├── payments.prisma
+│       ├── Properties.prisma
+│       ├── rentalRequests.prisma
+│       ├── reviews.prisma
+│       ├── schema.prisma
+│       └── users.prisma
+├── prisma.config.ts
+├── README.md
+├── rentNestDBERDiagram.webp
+├── skills-lock.json
+├── src
+│   ├── app.ts
+│   ├── config
+│   │   └── index.ts
+│   ├── lib
+│   │   ├── prisma.ts
+│   │   └── stripe.ts
+│   ├── middleware
+│   │   ├── auth.ts
+│   │   ├── globalErrorHandler.ts
+│   │   └── notFound.ts
+│   ├── modules
+│   │   ├── admin
+│   │   │   ├── admin.controller.ts
+│   │   │   ├── admin.routes.ts
+│   │   │   └── admin.service.ts
+│   │   ├── auth
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.interface.ts
+│   │   │   ├── auth.route.ts
+│   │   │   └── auth.service.ts
+│   │   ├── categories
+│   │   │   ├── categories.controller.ts
+│   │   │   ├── categories.route.ts
+│   │   │   └── categories.service.ts
+│   │   ├── landLord
+│   │   │   ├── landLord.controller.ts
+│   │   │   ├── landLord.interface.ts
+│   │   │   ├── landLord.route.ts
+│   │   │   └── landLord.service.ts
+│   │   ├── payment
+│   │   │   ├── payment.controller.ts
+│   │   │   ├── payment.route.ts
+│   │   │   ├── payment.service.ts
+│   │   │   └── payment.utils.ts
+│   │   ├── properties
+│   │   │   ├── properties.controller.ts
+│   │   │   ├── properties.interface.ts
+│   │   │   ├── properties.route.ts
+│   │   │   └── properties.service.ts
+│   │   ├── rentalRequest
+│   │   │   ├── rentalRequest.controller.ts
+│   │   │   ├── rentalRequest.interface.ts
+│   │   │   ├── rentalRequest.route.ts
+│   │   │   └── rentalRequest.service.ts
+│   │   ├── reviews
+│   │   │   ├── reviews.controller.ts
+│   │   │   ├── reviews.interface.ts
+│   │   │   ├── reviews.route.ts
+│   │   │   └── reviews.service.ts
+│   │   └── user
+│   │       ├── user.controller.ts
+│   │       ├── user.route.ts
+│   │       └── user.service.ts
+│   ├── server.ts
+│   └── utility
+│       ├── AppError.ts
+│       ├── catchAsync.ts
+│       ├── jwtUtils.ts
+│       ├── sendResponse.ts
+│       └── util.interface.ts
+└── tsconfig.json
 
 ## Features
 
