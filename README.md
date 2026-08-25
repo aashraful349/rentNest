@@ -8,10 +8,12 @@ RentNest is a RESTful backend API for a property-rental platform. It supports th
 
 The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authentication, and Stripe Checkout.
 
- **Project ER diagram**
- ![RentNest database ER diagram](./rentNestDBERDiagram.webp)
+**Project ER diagram**
 
- **Project structure**
+![RentNest database ER diagram](./rentNestDBERDiagram.webp)
+
+**Project structure**
+
 ```
 .
 ├── generated
@@ -150,17 +152,17 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
 
 ## Technology stack
 
-| Area | Technology |
-| --- | --- |
-| Runtime | Node.js |
-| Language | TypeScript |
-| Web framework | Express 5 |
-| ORM | Prisma 7 |
-| Database | PostgreSQL |
-| Authentication | JSON Web Token (`jsonwebtoken`) |
-| Password hashing | bcryptjs |
-| Payments | Stripe Checkout |
-| Cross-origin requests | CORS |
+| Area                  | Technology                      |
+| --------------------- | ------------------------------- |
+| Runtime               | Node.js                         |
+| Language              | TypeScript                      |
+| Web framework         | Express 5                       |
+| ORM                   | Prisma 7                        |
+| Database              | PostgreSQL                      |
+| Authentication        | JSON Web Token (`jsonwebtoken`) |
+| Password hashing      | bcryptjs                        |
+| Payments              | Stripe Checkout                 |
+| Cross-origin requests | CORS                            |
 
 ## Prerequisites
 
@@ -217,28 +219,28 @@ The server listens on `http://localhost:5000` by default. Visit `http://localhos
 
 ## Available scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Starts the TypeScript server in watch mode with `tsx`. |
-| `npm run build` | Compiles TypeScript into the `dist` directory. |
-| `npm start` | Starts the compiled application from `dist/server.js`. |
+| Command                  | Description                                                            |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `npm run dev`            | Starts the TypeScript server in watch mode with `tsx`.                 |
+| `npm run build`          | Compiles TypeScript into the `dist` directory.                         |
+| `npm start`              | Starts the compiled application from `dist/server.js`.                 |
 | `npm run stripe:webhook` | Forwards Stripe CLI events to the local webhook endpoint on port 5000. |
 
 ## Environment variables
 
 Create a `.env` file. Do not commit it: it contains credentials and secrets.
 
-| Variable | Required | Description | Example |
-| --- | --- | --- | --- |
-| `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. | `postgresql://user:password@localhost:5432/rentnest` |
-| `MODE` | Yes | Application environment. Use `development` locally and `production` when deployed. | `development` |
-| `PORT` | Yes | Local HTTP server port. | `5000` |
-| `APP_URL` | Yes | Frontend origin. This is the CORS allow-list value and the Stripe success/cancel redirect base URL. | `http://localhost:3000` |
-| `BCRYPT_SALT_ROUNDS` | Yes | Cost factor used for password hashing. | `10` |
-| `JWT_ACCESS_SECRET` | Yes | Secret used to sign and verify 1-day access tokens. | a long random value |
-| `JWT_REFRESH_SECRET` | Yes | Secret used to sign 7-day refresh tokens. | another long random value |
-| `STRIPE_SECRET_KEY` | For payments | Stripe secret API key. | `sk_test_...` |
-| `STRIPE_WEBHOOK_SECRET` | For payments | Stripe webhook signing secret. | `whsec_...` |
+| Variable                | Required     | Description                                                                                         | Example                                              |
+| ----------------------- | ------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `DATABASE_URL`          | Yes          | PostgreSQL connection string used by Prisma.                                                        | `postgresql://user:password@localhost:5432/rentnest` |
+| `MODE`                  | Yes          | Application environment. Use `development` locally and `production` when deployed.                  | `development`                                        |
+| `PORT`                  | Yes          | Local HTTP server port.                                                                             | `5000`                                               |
+| `APP_URL`               | Yes          | Frontend origin. This is the CORS allow-list value and the Stripe success/cancel redirect base URL. | `http://localhost:3000`                              |
+| `BCRYPT_SALT_ROUNDS`    | Yes          | Cost factor used for password hashing.                                                              | `10`                                                 |
+| `JWT_ACCESS_SECRET`     | Yes          | Secret used to sign and verify 1-day access tokens.                                                 | a long random value                                  |
+| `JWT_REFRESH_SECRET`    | Yes          | Secret used to sign 7-day refresh tokens.                                                           | another long random value                            |
+| `STRIPE_SECRET_KEY`     | For payments | Stripe secret API key.                                                                              | `sk_test_...`                                        |
+| `STRIPE_WEBHOOK_SECRET` | For payments | Stripe webhook signing secret.                                                                      | `whsec_...`                                          |
 
 Example:
 
@@ -315,55 +317,55 @@ The examples in this README use the `Authorization` header because it works clea
 
 ### Roles
 
-| Role | Meaning |
-| --- | --- |
-| `TENANT` | Can make rental requests, pay for approved requests, and create reviews. |
+| Role       | Meaning                                                                     |
+| ---------- | --------------------------------------------------------------------------- |
+| `TENANT`   | Can make rental requests, pay for approved requests, and create reviews.    |
 | `LANDLORD` | Can manage only their own properties and their properties' rental requests. |
-| `ADMIN` | Can manage user account status and inspect platform-wide records. |
+| `ADMIN`    | Can manage user account status and inspect platform-wide records.           |
 
 ### IDs and enum values
 
 All resource IDs are UUID strings generated by the database.
 
-| Enum | Allowed values |
-| --- | --- |
-| User role | `TENANT`, `LANDLORD`, `ADMIN` |
-| Account status | `ACTIVE`, `BLOCKED` |
-| Property type | `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, `OTHER` |
-| Rental request status | `PENDING`, `APPROVED`, `REJECTED` |
-| Payment status | `PENDING`, `COMPLETED`, `FAILED` |
+| Enum                  | Allowed values                                                                 |
+| --------------------- | ------------------------------------------------------------------------------ |
+| User role             | `TENANT`, `LANDLORD`, `ADMIN`                                                  |
+| Account status        | `ACTIVE`, `BLOCKED`                                                            |
+| Property type         | `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, `OTHER` |
+| Rental request status | `PENDING`, `APPROVED`, `REJECTED`                                              |
+| Payment status        | `PENDING`, `COMPLETED`, `FAILED`                                               |
 
 Public registration only accepts `TENANT` and `LANDLORD`; an `ADMIN` account cannot be created through the registration endpoint.
 
 ## API endpoint summary
 
-| Module | Method | Endpoint | Access |
-| --- | --- | --- | --- |
-| Health | `GET` | `/` | Public |
-| Authentication | `POST` | `/api/auth/register` | Public |
-| Authentication | `POST` | `/api/auth/login` | Public |
-| Authentication | `GET` | `/api/auth/me` | Any authenticated role |
-| Properties | `GET` | `/api/properties` | Public |
-| Properties | `GET` | `/api/properties/:id` | Public |
-| Categories | `GET` | `/api/categories` | Public |
-| Landlord | `POST` | `/api/landlord/properties` | Landlord |
-| Landlord | `PUT` | `/api/landlord/properties/:id` | Property owner landlord |
-| Landlord | `DELETE` | `/api/landlord/properties/:id` | Property owner landlord |
-| Landlord | `GET` | `/api/landlord/requests` | Landlord |
-| Landlord | `PATCH` | `/api/landlord/requests/:id` | Owner landlord |
-| Rental requests | `POST` | `/api/rentals` | Tenant |
-| Rental requests | `GET` | `/api/rentals` | Tenant |
-| Rental requests | `GET` | `/api/rentals/:id` | Request owner tenant |
-| Payments | `POST` | `/api/payments/create` | Tenant |
-| Payments | `POST` | `/api/payments/webhook` | Stripe only |
-| Payments | `GET` | `/api/payments` | Tenant or landlord |
-| Payments | `GET` | `/api/payments/:id` | Tenant or landlord |
-| Reviews | `POST` | `/api/reviews` | Tenant |
-| Reviews | `GET` | `/api/reviews/:propertyId` | Public |
-| Admin | `GET` | `/api/admin/users` | Admin |
-| Admin | `PATCH` | `/api/admin/users/:id` | Admin |
-| Admin | `GET` | `/api/admin/properties` | Admin |
-| Admin | `GET` | `/api/admin/rentals` | Admin |
+| Module          | Method   | Endpoint                       | Access                  |
+| --------------- | -------- | ------------------------------ | ----------------------- |
+| Health          | `GET`    | `/`                            | Public                  |
+| Authentication  | `POST`   | `/api/auth/register`           | Public                  |
+| Authentication  | `POST`   | `/api/auth/login`              | Public                  |
+| Authentication  | `GET`    | `/api/auth/me`                 | Any authenticated role  |
+| Properties      | `GET`    | `/api/properties`              | Public                  |
+| Properties      | `GET`    | `/api/properties/:id`          | Public                  |
+| Categories      | `GET`    | `/api/categories`              | Public                  |
+| Landlord        | `POST`   | `/api/landlord/properties`     | Landlord                |
+| Landlord        | `PUT`    | `/api/landlord/properties/:id` | Property owner landlord |
+| Landlord        | `DELETE` | `/api/landlord/properties/:id` | Property owner landlord |
+| Landlord        | `GET`    | `/api/landlord/requests`       | Landlord                |
+| Landlord        | `PATCH`  | `/api/landlord/requests/:id`   | Owner landlord          |
+| Rental requests | `POST`   | `/api/rentals`                 | Tenant                  |
+| Rental requests | `GET`    | `/api/rentals`                 | Tenant                  |
+| Rental requests | `GET`    | `/api/rentals/:id`             | Request owner tenant    |
+| Payments        | `POST`   | `/api/payments/create`         | Tenant                  |
+| Payments        | `POST`   | `/api/payments/webhook`        | Stripe only             |
+| Payments        | `GET`    | `/api/payments`                | Tenant or landlord      |
+| Payments        | `GET`    | `/api/payments/:id`            | Tenant or landlord      |
+| Reviews         | `POST`   | `/api/reviews`                 | Tenant                  |
+| Reviews         | `GET`    | `/api/reviews/:propertyId`     | Public                  |
+| Admin           | `GET`    | `/api/admin/users`             | Admin                   |
+| Admin           | `PATCH`  | `/api/admin/users/:id`         | Admin                   |
+| Admin           | `GET`    | `/api/admin/properties`        | Admin                   |
+| Admin           | `GET`    | `/api/admin/rentals`           | Admin                   |
 
 ## Endpoint reference
 
@@ -397,15 +399,15 @@ Creates a tenant or landlord account. The password is hashed before storage. Ema
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `name` | string | Yes | User's display name. |
-| `email` | string | Yes | Unique email address. |
-| `password` | string | Yes | Plain-text password; the server hashes it. |
-| `role` | `TENANT` or `LANDLORD` | Yes | Account role. Lowercase values are accepted and normalized. |
-| `image` | string | No | Profile image URL. Defaults to `Image not provided`. |
-| `bio` | string | No | User biography. Defaults to `Bio not provided`. |
-| `phone` | string | No | Contact phone number. Defaults to `Phone not provided`. |
+| Field      | Type                   | Required | Description                                                 |
+| ---------- | ---------------------- | -------- | ----------------------------------------------------------- |
+| `name`     | string                 | Yes      | User's display name.                                        |
+| `email`    | string                 | Yes      | Unique email address.                                       |
+| `password` | string                 | Yes      | Plain-text password; the server hashes it.                  |
+| `role`     | `TENANT` or `LANDLORD` | Yes      | Account role. Lowercase values are accepted and normalized. |
+| `image`    | string                 | No       | Profile image URL. Defaults to `Image not provided`.        |
+| `bio`      | string                 | No       | User biography. Defaults to `Bio not provided`.             |
+| `phone`    | string                 | No       | Contact phone number. Defaults to `Phone not provided`.     |
 
 **Example request**
 
@@ -454,10 +456,10 @@ Authenticates a user and returns access and refresh tokens. It also attempts to 
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `email` | string | Yes | Registered email address. |
-| `password` | string | Yes | Account password. |
+| Field      | Type   | Required | Description               |
+| ---------- | ------ | -------- | ------------------------- |
+| `email`    | string | Yes      | Registered email address. |
+| `password` | string | Yes      | Account password.         |
 
 **Example request**
 
@@ -511,11 +513,11 @@ Returns all properties. Filters may be combined; each supplied filter must match
 
 **Query parameters**
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `location` | string | No | Case-insensitive partial match against `pLocation`. |
-| `price` | number | No | Exact property price. |
-| `type` | string | No | Property category type. Values are normalized to uppercase. |
+| Parameter  | Type   | Required | Description                                                 |
+| ---------- | ------ | -------- | ----------------------------------------------------------- |
+| `location` | string | No       | Case-insensitive partial match against `pLocation`.         |
+| `price`    | number | No       | Exact property price.                                       |
+| `type`     | string | No       | Property category type. Values are normalized to uppercase. |
 
 **Examples**
 
@@ -582,15 +584,15 @@ Creates a property owned by the logged-in landlord and creates its category at t
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `pName` | string | Yes | Property name/title. |
-| `pLocation` | string | Yes | Property location. |
-| `pPrice` | number | Yes | Rental price in BDT. |
-| `pDescription` | string | Yes | Full property description. |
-| `pImage` | string | No | Property-image URL. Defaults to `Image not provided`. |
-| `type` | property-type enum | Yes | `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, or `OTHER`. Lowercase is accepted. |
-| `description` | string | No | Category description. Defaults to `Description not provided`. |
+| Field          | Type               | Required | Description                                                                                               |
+| -------------- | ------------------ | -------- | --------------------------------------------------------------------------------------------------------- |
+| `pName`        | string             | Yes      | Property name/title.                                                                                      |
+| `pLocation`    | string             | Yes      | Property location.                                                                                        |
+| `pPrice`       | number             | Yes      | Rental price in BDT.                                                                                      |
+| `pDescription` | string             | Yes      | Full property description.                                                                                |
+| `pImage`       | string             | No       | Property-image URL. Defaults to `Image not provided`.                                                     |
+| `type`         | property-type enum | Yes      | `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, or `OTHER`. Lowercase is accepted. |
+| `description`  | string             | No       | Category description. Defaults to `Description not provided`.                                             |
 
 **Example request**
 
@@ -673,9 +675,9 @@ Changes the status of a rental request for a property owned by the logged-in lan
 
 **Request body**
 
-| Field | Type | Required | Allowed values |
-| --- | --- | --- | --- |
-| `status` | string | Yes | `APPROVED` or `REJECTED` |
+| Field    | Type   | Required | Allowed values           |
+| -------- | ------ | -------- | ------------------------ |
+| `status` | string | Yes      | `APPROVED` or `REJECTED` |
 
 ```json
 {
@@ -699,10 +701,10 @@ Creates a rental request for the authenticated tenant. New requests begin with t
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `propertyId` | UUID string | Yes | Property the tenant wants to rent. |
-| `message` | string | No | Message to the landlord. Defaults to `No message left by tenant`. |
+| Field        | Type        | Required | Description                                                       |
+| ------------ | ----------- | -------- | ----------------------------------------------------------------- |
+| `propertyId` | UUID string | Yes      | Property the tenant wants to rent.                                |
+| `message`    | string      | No       | Message to the landlord. Defaults to `No message left by tenant`. |
 
 **Example request**
 
@@ -755,9 +757,9 @@ Creates a Stripe-hosted Checkout session for an approved rental request that bel
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `rentalRequestId` | UUID string | Yes | An approved rental request owned by the current tenant. |
+| Field             | Type        | Required | Description                                             |
+| ----------------- | ----------- | -------- | ------------------------------------------------------- |
+| `rentalRequestId` | UUID string | Yes      | An approved rental request owned by the current tenant. |
 
 **Example request**
 
@@ -856,11 +858,11 @@ The API verifies all of the following before creating the review:
 
 **Request body**
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `rentalRequestId` | UUID string | Yes | Rental request that was paid by this tenant. |
-| `title` | string | Yes | Short review title. |
-| `description` | string | Yes | Review content. |
+| Field             | Type        | Required | Description                                  |
+| ----------------- | ----------- | -------- | -------------------------------------------- |
+| `rentalRequestId` | UUID string | Yes      | Rental request that was paid by this tenant. |
+| `title`           | string      | Yes      | Short review title.                          |
+| `description`     | string      | Yes      | Review content.                              |
 
 **Example request**
 
@@ -912,9 +914,9 @@ Updates a user's account status. A blocked user cannot log in or access protecte
 
 **Request body**
 
-| Field | Type | Required | Allowed values |
-| --- | --- | --- | --- |
-| `status` | string | Yes | `ACTIVE` or `BLOCKED` |
+| Field    | Type   | Required | Allowed values        |
+| -------- | ------ | -------- | --------------------- |
+| `status` | string | Yes      | `ACTIVE` or `BLOCKED` |
 
 ```json
 {
@@ -953,26 +955,26 @@ Returns platform-wide rental requests with `id`, `propertyId`, `tenantId`, `stat
 
 ## Database model overview
 
-| Model | Purpose | Main relations |
-| --- | --- | --- |
-| `User` | Tenant, landlord, or administrator account. | Owns properties; creates rental requests, payments, and reviews. |
-| `Property` | A rental listing owned by a landlord. | Has one optional category; has many rental requests and reviews. |
-| `Category` | Property type and category description. | One-to-one with a property. |
-| `rentalRequest` | A tenant's request to rent a property. | Belongs to one tenant and property; has one optional payment and review. |
-| `Payment` | Stripe payment record. | Belongs to one user and one rental request. |
-| `Review` | Tenant feedback for a completed rental. | Belongs to one tenant, property, and rental request. |
+| Model           | Purpose                                     | Main relations                                                           |
+| --------------- | ------------------------------------------- | ------------------------------------------------------------------------ |
+| `User`          | Tenant, landlord, or administrator account. | Owns properties; creates rental requests, payments, and reviews.         |
+| `Property`      | A rental listing owned by a landlord.       | Has one optional category; has many rental requests and reviews.         |
+| `Category`      | Property type and category description.     | One-to-one with a property.                                              |
+| `rentalRequest` | A tenant's request to rent a property.      | Belongs to one tenant and property; has one optional payment and review. |
+| `Payment`       | Stripe payment record.                      | Belongs to one user and one rental request.                              |
+| `Review`        | Tenant feedback for a completed rental.     | Belongs to one tenant, property, and rental request.                     |
 
 ## Authorization rules
 
-| Action | Rule enforced by the API |
-| --- | --- |
-| Create property | Only a landlord can create it; ownership is set from the authenticated user. |
-| Update/delete property | Only the landlord who owns that property can do so. |
-| View tenant rental request | Only the tenant who created it can view it by ID. |
-| Approve/reject request | Only the landlord whose property received the request can change it. |
-| Create payment session | Only the request's tenant can pay, and only after it is approved. |
-| Create review | Only the paying tenant can review, after a completed payment; one review per request. |
-| Admin operations | Only an administrator can use `/api/admin/*`. |
+| Action                     | Rule enforced by the API                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| Create property            | Only a landlord can create it; ownership is set from the authenticated user.          |
+| Update/delete property     | Only the landlord who owns that property can do so.                                   |
+| View tenant rental request | Only the tenant who created it can view it by ID.                                     |
+| Approve/reject request     | Only the landlord whose property received the request can change it.                  |
+| Create payment session     | Only the request's tenant can pay, and only after it is approved.                     |
+| Create review              | Only the paying tenant can review, after a completed payment; one review per request. |
+| Admin operations           | Only an administrator can use `/api/admin/*`.                                         |
 
 ## Deployment notes
 
