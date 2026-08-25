@@ -1,6 +1,8 @@
 import { catchAsync } from "../../utility/catchAsync";
 import { landLordService } from "./landLord.service";
 import sendResponse from "../../utility/sendResponse";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 const createProperty = catchAsync(async (req, res, next) => {
     const payload = req.body;
     const userId = req.user?.userId;
@@ -25,8 +27,9 @@ const updateProperty = catchAsync(async (req, res, next) => {
     });
 });
 const deleteProperty = catchAsync(async (req, res, next) => {
+    const userId = req.user?.userId;
     const id = req.params?.id;
-    await landLordService.deletePropertyFromDB(id);
+    await landLordService.deletePropertyFromDB(userId, id);
     sendResponse(res, {
         success: true,
         status: 200,
@@ -46,8 +49,9 @@ const rentalRequestsForLandLordsProperties = catchAsync(async (req, res, next) =
 const approveOrRejectRentalRequest = catchAsync(async (req, res, next) => {
     const rentalRequestId = req.params?.id;
     const payload = req.body.status;
+    const userId = req.user?.userId;
     if (payload !== "APPROVED" && payload !== "REJECTED") {
-        throw new Error("Invalid status value. Must be 'APPROVED' or 'REJECTED'.");
+        throw new AppError("Invalid status value. Must be 'APPROVED' or 'REJECTED'.", httpStatus.BAD_REQUEST);
     }
     // if(){
     //     throw new Error("Invalid status value. Must be 'APPROVED' or 'REJECTED'.");
@@ -58,7 +62,7 @@ const approveOrRejectRentalRequest = catchAsync(async (req, res, next) => {
     //     throw new Error("Invalid status value. Must be 'APPROVED' or 'REJECTED'.");
     // }
     // console.log(payload);
-    const result = await landLordService.approveOrRejectRentalRequestInDB(rentalRequestId, payload);
+    const result = await landLordService.approveOrRejectRentalRequestInDB(userId, rentalRequestId, payload);
     // console.log("result:",result)
     sendResponse(res, {
         success: true,

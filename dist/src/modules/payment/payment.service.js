@@ -2,6 +2,8 @@ import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
 import { handleCheckoutCompleted } from "./payment.utils";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 const createPaymentSession = async (userId, rentalRequestId) => {
     const transactionResult = await prisma.$transaction(async (tx) => {
         const rentalRequest = await tx.rentalRequest.findUnique({
@@ -16,13 +18,13 @@ const createPaymentSession = async (userId, rentalRequestId) => {
         });
         // console.log("rentalRequest:",rentalRequest)
         if (!rentalRequest) {
-            throw new Error("Rental request not found");
+            throw new AppError("Rental request not found", httpStatus.NOT_FOUND);
         }
         if (rentalRequest?.tenantId !== userId) {
-            throw new Error("You are not authorized to make payment for this rental request");
+            throw new AppError("You are not authorized to make payment for this rental request", httpStatus.FORBIDDEN);
         }
         if (rentalRequest.status !== "APPROVED") {
-            throw new Error("Rental request is not approved");
+            throw new AppError("Rental request is not approved", httpStatus.FORBIDDEN);
         }
         // console.log("rentalRequest:", rentalRequest);
         const priceInPaisa = Number(rentalRequest.property.pPrice) * 100;
@@ -113,7 +115,8 @@ const getPaymentDetailsByIdFromDB = async (userId, paymentID) => {
                 select: {
                     id: true,
                     name: true,
-                    email: true
+                    email: true,
+                    role: true
                 }
             },
             rentalRequest: {
@@ -132,6 +135,9 @@ const getPaymentDetailsByIdFromDB = async (userId, paymentID) => {
             }
         }
     });
+    if (result.userId !== userId && result.user.role === "LANDLORD") {
+        throw new AppError("You are not authorized to view this payment details", httpStatus.FORBIDDEN);
+    }
     return result;
 };
 export const paymentService = {

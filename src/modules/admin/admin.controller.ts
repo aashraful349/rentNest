@@ -4,6 +4,7 @@ import { adminService } from "./admin.service";
 import sendResponse from "../../utility/sendResponse";
 import { ActiveStatus } from "../../../generated/prisma/enums";
 import httpStatus from "http-status";
+import { AppError } from "../../utility/AppError";
 
 
 
@@ -25,6 +26,15 @@ const updateUserStatus=catchAsync(async(req:Request,res:Response,next:NextFuncti
 
     const userId=req.params?.id as string;
     const status=req.body?.status as ActiveStatus;
+
+    if(!userId){
+        throw new AppError("Please try logging in again", httpStatus.BAD_REQUEST);
+    }
+
+    if(!status){
+        throw new AppError("Status is required", httpStatus.BAD_REQUEST);
+    }
+
     // console.log("userId:",userId)
     const result=await adminService.updateUserStatus(userId,status);
     // console.log("result:",result)

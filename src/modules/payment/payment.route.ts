@@ -11,8 +11,8 @@ router.post("/create",auth("TENANT"),paymentController.createPaymentSession);
 
 router.post("/webhook",paymentController.handleWebhook)
 
-router.get("/",auth("TENANT","LANDLORD"),paymentController.getPaymentHistory)
+router.get("/",auth("TENANT"),paymentController.getPaymentHistory)
 
-router.get("/:id",auth("TENANT","LANDLORD"),paymentController.getPaymentDetailsById)
+router.get("/:id",auth("TENANT"),paymentController.getPaymentDetailsById)
 
 export const paymentRoute=router;

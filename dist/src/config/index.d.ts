@@ -1,4 +1,5 @@
 declare const config: {
+    mode: string;
     port: string | number;
     database_url: string | undefined;
     app_url: string | undefined;

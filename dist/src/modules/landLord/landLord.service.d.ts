@@ -29,7 +29,7 @@ declare const updatePropertyInDB: (req: Request, id: string, payload: updateProp
     pName: string;
     pPrice: import("@prisma/client-runtime-utils").Decimal;
 }>;
-declare const deletePropertyFromDB: (id: string) => Promise<void>;
+declare const deletePropertyFromDB: (userId: string, id: string) => Promise<void>;
 declare const rentalRequestsForLandLordsPropertiesFromDB: (landLordId: string) => Promise<{
     createdAt: Date;
     id: string;
@@ -39,7 +39,7 @@ declare const rentalRequestsForLandLordsPropertiesFromDB: (landLordId: string) =
     tenantId: string;
     updatedAt: Date;
 }[]>;
-declare const approveOrRejectRentalRequestInDB: (id: string, payload: Status) => Promise<{
+declare const approveOrRejectRentalRequestInDB: (userId: string, rentalRequestId: string, payload: Status) => Promise<{
     id: string;
     propertyId: string;
     tenantId: string;

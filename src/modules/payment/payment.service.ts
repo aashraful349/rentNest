@@ -122,6 +122,7 @@ const getPaymentHistoryFromDB=async(id:string)=>{
     },
     select:{
       id:true,
+      userId:true,
       amount:true,
       status:true,
       createdAt:true,
@@ -132,6 +133,14 @@ const getPaymentHistoryFromDB=async(id:string)=>{
   })
 
   // console.log("payment history result:",result)
+
+  if(result.length===0){
+    throw new AppError("No payment history found for this user", httpStatus.NOT_FOUND);
+  }
+
+  if(result[0]!.userId!==id){
+    throw new AppError("You are not authorized to view this payment details", httpStatus.FORBIDDEN);
+  }
 
   return result;
 
@@ -175,7 +184,7 @@ const getPaymentDetailsByIdFromDB=async(userId:string,paymentID:string)=>{
 
   })
 
-  if(result.userId!==userId && result.user.role==="LANDLORD"){
+  if(result.userId!==userId){
     throw new AppError("You are not authorized to view this payment details", httpStatus.FORBIDDEN);
   }
 

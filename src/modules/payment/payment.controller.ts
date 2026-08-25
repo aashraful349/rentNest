@@ -3,11 +3,21 @@ import { catchAsync } from "../../utility/catchAsync";
 import { paymentService } from "./payment.service";
 import sendResponse from "../../utility/sendResponse";
 import { send } from "node:process";
+import httpStatus from "http-status";
+import { AppError } from "../../utility/AppError";
 
 const createPaymentSession = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.userId as string;
     const rentalRequestId = req.body?.rentalRequestId as string;
+
+    if(!userId){
+        throw new AppError("Please try logging in again", httpStatus.BAD_REQUEST);
+    }
+
+    if(!rentalRequestId){
+        throw new AppError(`Rental request ID is required.Enter it in the given format: "rentalRequestId":"<rental_request_id>"`, httpStatus.BAD_REQUEST);
+    }
 
     const result = await paymentService.createPaymentSession(
       userId,
@@ -45,7 +55,11 @@ const handleWebhook = catchAsync(
 
 const getPaymentHistory=catchAsync(async (req: Request, res: Response, next: NextFunction)=>{
   const id=req.user?.userId as string;
+  if(!id){
+    throw new AppError("Please try logging in again", httpStatus.BAD_REQUEST);
+  }
   const result=await paymentService.getPaymentHistoryFromDB(id);
+
 
   sendResponse(res,{
     success:true,
@@ -61,6 +75,14 @@ const getPaymentDetailsById=catchAsync(async (req: Request, res: Response, next:
 
   const paymentID=req.params.id as string;
   const userId=req.user?.userId as string;
+
+  if(!userId){
+    throw new AppError("Please try logging in again", httpStatus.BAD_REQUEST);
+  }
+
+  if(!paymentID){
+    throw new AppError("Payment ID is required..Provide in in the URL", httpStatus.BAD_REQUEST);
+  }
 
   const result=await paymentService.getPaymentDetailsByIdFromDB(userId,paymentID);
 

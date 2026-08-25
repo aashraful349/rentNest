@@ -12,6 +12,17 @@ const createRentalRequest = catchAsync(
       throw new AppError("Tenant Id not found", httpStatus.NOT_FOUND);
     }
     const payload = req.body;
+
+    if(!payload){
+      throw new AppError("Request body is required", httpStatus.BAD_REQUEST);
+    }
+    
+    if(!payload.propertyId){
+      throw new AppError("Property ID not provided. It is required.", httpStatus.BAD_REQUEST);
+    }
+
+
+
     const result = await rentalRequestService.createRentalRequestInDB(
       tenantId,
       payload,
@@ -53,6 +64,12 @@ const getRentalRequestById = catchAsync(
     const userId = req.user?.userId as string;
     if (!userId) {
       throw new AppError("User Id not found..Please login first", httpStatus.UNAUTHORIZED);
+    }
+    if (!id) {
+      throw new AppError(
+        "Rental request ID is required..Provide in in the URL",
+        httpStatus.BAD_REQUEST,
+      );
     }
 
     const result = await rentalRequestService.getRentalRequestByIdFromDB(

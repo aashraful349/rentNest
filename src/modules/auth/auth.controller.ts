@@ -4,6 +4,7 @@ import sendResponse from "../../utility/sendResponse";
 import { authService } from "./auth.service";
 import httpStatus from "http-status";
 import { auth } from "../../middleware/auth";
+import { AppError } from "../../utility/AppError";
 
 const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -25,6 +26,17 @@ const loginUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const payload = req.body;
     // console.log("email,password",email,password)
+
+    if(!payload){
+      throw new AppError("Email and password are required", httpStatus.BAD_REQUEST);
+    }
+
+    if (!payload.email || !payload.password) {
+      return next(
+        new AppError("Email and password are required", httpStatus.BAD_REQUEST),
+      );
+    }
+
     const { accessToken, refreshToken } =
       await authService.loginUserFromDB(payload);
     // console.log("accessToken:", accessToken);
@@ -56,6 +68,9 @@ const loginUser = catchAsync(
 
 const getMe=catchAsync(async(req:Request,res:Response,next:NextFunction)=>{
     const userId=req.user?.userId as string;
+    if(!userId){
+        throw new AppError("Please try logging in again", httpStatus.BAD_REQUEST);
+    }
     const result=await authService.getMeFromDB(userId)
     sendResponse(res,{
         success:true,

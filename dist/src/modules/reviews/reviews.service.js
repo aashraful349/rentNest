@@ -1,55 +1,77 @@
 import { prisma } from "../../lib/prisma";
-const badRequest = (message) => {
-    const error = new Error(message);
-    error.status = 400;
-    return error;
-};
-const createReview = async (tenantId, payload) => {
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
+const createReview = async (payload, userId) => {
     const { rentalRequestId, title, description } = payload;
-    if (typeof rentalRequestId !== "string" ||
-        typeof title !== "string" ||
-        typeof description !== "string" ||
-        !rentalRequestId.trim() ||
-        !title.trim() ||
-        !description.trim()) {
-        throw badRequest("rentalRequestId, title, and description are required");
-    }
-    if (title.trim().length > 255) {
-        throw badRequest("Title must not exceed 255 characters");
-    }
-    const rentalRequest = await prisma.rentalRequest.findUnique({
-        where: { id: rentalRequestId },
-        select: {
-            tenantId: true,
-            propertyId: true,
-            payment: { select: { status: true } },
+    const payment = await prisma.payment.findUnique({
+        where: {
+            rentalRequestId
         },
+        include: {
+            user: true,
+            rentalRequest: {
+                include: {
+                    property: true
+                }
+            }
+        }
     });
-    if (!rentalRequest || rentalRequest.tenantId !== tenantId) {
-        throw badRequest("Rental request not found");
+    if (!payment) {
+        throw new AppError("Payment not found for this rental request", httpStatus.NOT_FOUND);
     }
-    // A rental-completion state does not exist yet; a completed payment is the
-    // available proof that the tenant completed the rental flow.
-    if (rentalRequest.payment?.status !== "COMPLETED") {
-        throw badRequest("You can review a property only after completing its rental payment");
+    // console.log(payment.userId,userId)
+    if (payment.userId !== userId) {
+        throw new AppError("You are not authorized to create review for this rental request", httpStatus.FORBIDDEN);
     }
-    const existingReview = await prisma.review.findFirst({
-        where: { tenantId, propertyId: rentalRequest.propertyId },
-        select: { id: true },
+    if (payment.status !== "COMPLETED") {
+        throw new AppError("Payment is not completed for this rental request", httpStatus.BAD_REQUEST);
+    }
+    // if(payment.userId!==userId){
+    //     throw new Error("You are not authorized to create review for this rental request");
+    // }
+    // console.log("payment:",payment)
+    const reviewExists = await prisma.review.findFirst({
+        where: {
+            rentalRequestId,
+            tenantId: userId
+        }
     });
-    if (existingReview) {
-        throw badRequest("You have already reviewed this property");
+    if (reviewExists) {
+        throw new AppError("You have already created a review for this rental request", httpStatus.BAD_REQUEST);
     }
-    return prisma.review.create({
+    const result = await prisma.review.create({
         data: {
-            tenantId,
-            propertyId: rentalRequest.propertyId,
-            title: title.trim(),
-            description: description.trim(),
-        },
+            tenantId: userId,
+            propertyId: payment.rentalRequest.propertyId,
+            rentalRequestId,
+            title,
+            description,
+        }
     });
+    return result;
+};
+const getAllReviewsByPropertyId = async (propertyId) => {
+    const result = await prisma.review.findMany({
+        where: {
+            propertyId
+        },
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    email: true
+                }
+            }
+        }
+    });
+    console.log("result:", result);
+    if (!result[0]) {
+        throw new AppError("No reviews found for this property", httpStatus.NOT_FOUND);
+    }
+    return result;
 };
 export const reviewService = {
     createReview,
+    getAllReviewsByPropertyId
 };
 //# sourceMappingURL=reviews.service.js.map

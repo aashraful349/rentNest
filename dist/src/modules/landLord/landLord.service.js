@@ -1,11 +1,13 @@
 import { PType } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
+import { AppError } from "../../utility/AppError";
+import httpStatus from "http-status";
 const createPropertyIntoDB = async (payload, landLordId) => {
     const { pName, pLocation, pPrice, pDescription, pImage, type, description } = payload;
     const normalizedType = type?.trim().toUpperCase();
     const pType = Object.values(PType);
     if (!pType.includes(normalizedType)) {
-        throw new Error("Invalid property type provided. Type must be APARTMENT or apartment, HOUSE or house, STUDIO or studio, OFFICE or office, SHOP or shop, WAREHOUSE or warehouse, LAND or land, OTHER or other and if you are not sure just leave blank.");
+        throw new AppError("Invalid property type provided. Type must be APARTMENT or apartment, HOUSE or house, STUDIO or studio, OFFICE or office, SHOP or shop, WAREHOUSE or warehouse, LAND or land, OTHER or other and if you are not sure just leave blank.", httpStatus.BAD_REQUEST);
     }
     const result = await prisma.property.create({
         data: {
@@ -54,7 +56,7 @@ const updatePropertyInDB = async (req, id, payload) => {
     });
     // console.log(landLordId.landLordId)
     if (landLordId.landLordId != req.user?.userId) {
-        throw new Error("You are not the owner of this property.So, you are not authorized to update this property.");
+        throw new AppError("You are not the owner of this property.So, you are not authorized to update this property.", httpStatus.FORBIDDEN);
     }
     const { pName, pLocation, pPrice, pDescription, pImage, type, description } = payload;
     const currentProperty = await prisma.property.findUniqueOrThrow({
@@ -103,7 +105,18 @@ const updatePropertyInDB = async (req, id, payload) => {
     });
     return result;
 };
-const deletePropertyFromDB = async (id) => {
+const deletePropertyFromDB = async (userId, id) => {
+    const result = await prisma.property.findUniqueOrThrow({
+        where: {
+            id,
+        },
+        select: {
+            landLordId: true,
+        },
+    });
+    if (result.landLordId !== userId) {
+        throw new AppError("You are not the owner of this property. So, you are not authorized to delete this property.", httpStatus.FORBIDDEN);
+    }
     await prisma.property.delete({
         where: {
             id,
@@ -132,10 +145,25 @@ const rentalRequestsForLandLordsPropertiesFromDB = async (landLordId) => {
     const rentalRequests = properties.flatMap((property) => property.rentalRequest);
     return rentalRequests;
 };
-const approveOrRejectRentalRequestInDB = async (id, payload) => {
+const approveOrRejectRentalRequestInDB = async (userId, rentalRequestId, payload) => {
+    const rentalRequest = await prisma.rentalRequest.findUniqueOrThrow({
+        where: {
+            id: rentalRequestId
+        },
+        select: {
+            property: {
+                select: {
+                    landLordId: true
+                }
+            }
+        }
+    });
+    if (rentalRequest.property.landLordId !== userId) {
+        throw new AppError("You are not authorized to approve or reject this rental request as you are not the owner of this property", httpStatus.FORBIDDEN);
+    }
     const result = await prisma.rentalRequest.update({
         where: {
-            id
+            id: rentalRequestId
         },
         data: {
             status: payload

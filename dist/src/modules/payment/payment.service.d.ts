@@ -23,6 +23,7 @@ declare const getPaymentDetailsByIdFromDB: (userId: string, paymentID: string) =
         email: string;
         id: string;
         name: string;
+        role: import("../../../generated/prisma/enums").Role;
     };
 } & {
     id: string;

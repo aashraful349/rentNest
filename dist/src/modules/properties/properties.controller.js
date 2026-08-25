@@ -16,7 +16,7 @@ const getAllProperties = catchAsync(async (req, res, next) => {
 const getPropertyById = catchAsync(async (req, res, next) => {
     const id = req.params?.id;
     // console.log(typeof filterQuery.price);
-    // console.log("id:", id);
+    console.log("id:", id);
     const result = await propertiesService.getPropertyByIdFromDB(id);
     // console.log("result:",result)
     sendResponse(res, {

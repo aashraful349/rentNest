@@ -8,15 +8,16 @@ import config from "./config";
 import { landLordRoute } from "./modules/landLord/landLord.route";
 import { propertiesRoute } from "./modules/properties/properties.route";
 import { categoriesRoute } from "./modules/categories/categories.route";
-import { rentalRequestRoute } from "./rentalRequest/rentalRequest.route";
+import { rentalRequestRoute } from "./modules/rentalRequest/rentalRequest.route";
 import { paymentRoute } from "./modules/payment/payment.route";
 import { reviewRoute } from "./modules/reviews/reviews.route";
+import { adminRoute } from "./modules/admin/admin.routes";
 const app = express();
 app.use(cors({
     origin: config.app_url,
-    credentials: true
+    credentials: true,
 }));
-app.use("/api/payments/webhook", express.raw({ type: 'application/json' }));
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -30,6 +31,7 @@ app.use("/api/categories", categoriesRoute);
 app.use("/api/rentals", rentalRequestRoute);
 app.use("/api/payments", paymentRoute);
 app.use("/api/reviews", reviewRoute);
+app.use("/api/admin", adminRoute);
 app.use(notFound);
 app.use(globalErrorHandler);
 export default app;
