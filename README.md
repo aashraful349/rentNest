@@ -59,17 +59,19 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
 │   │   ├── 20260822131330
 │   │   │   └── migration.sql
 │   │   └── migration_lock.toml
-│   └── schema
-│       ├── categories.prisma
-│       ├── enum.prisma
-│       ├── payments.prisma
-│       ├── Properties.prisma
-│       ├── rentalRequests.prisma
-│       ├── reviews.prisma
-│       ├── schema.prisma
-│       └── users.prisma
+│   ├── schema
+│   │   ├── categories.prisma
+│   │   ├── enum.prisma
+│   │   ├── payments.prisma
+│   │   ├── Properties.prisma
+│   │   ├── rentalRequests.prisma
+│   │   ├── reviews.prisma
+│   │   ├── schema.prisma
+│   │   └── users.prisma
+│   └── seed.ts
 ├── prisma.config.ts
 ├── README.md
+├── rentNest.postman_collection.json
 ├── rentNestDBERDiagram.webp
 ├── skills-lock.json
 ├── src
@@ -133,8 +135,9 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
 │       ├── jwtUtils.ts
 │       ├── sendResponse.ts
 │       └── util.interface.ts
-└── tsconfig.json
-
+├── tsconfig.json
+├── tsup.config.ts
+└── vercel.json
 ```
 
 ## Features
@@ -159,9 +162,11 @@ The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authenticatio
 | Web framework         | Express 5                       |
 | ORM                   | Prisma 7                        |
 | Database              | PostgreSQL                      |
+| Bundler               | tsup (ESM build target)         |
 | Authentication        | JSON Web Token (`jsonwebtoken`) |
 | Password hashing      | bcryptjs                        |
 | Payments              | Stripe Checkout                 |
+| Hosting / Deployment  | Vercel Serverless Functions     |
 | Cross-origin requests | CORS                            |
 
 ## Prerequisites
@@ -209,7 +214,19 @@ Install the following before running the project:
    npx prisma migrate dev
    ```
 
-6. Start the development server.
+6. Seed initial test data into the database (optional but recommended for development/testing).
+
+   ```bash
+   npx prisma db seed
+   ```
+
+   This populates the database with initial test users:
+   - **Admin**: `admin@rentnest.test` (Password: `Password123!`)
+   - **Landlord**: `landlord@rentnest.test` (Password: `Password123!`)
+   - **Tenant**: `tenant@rentnest.test` (Password: `Password123!`)
+   - **Sample Property**: Sample Apartment in Dhaka
+
+7. Start the development server.
 
    ```bash
    npm run dev
@@ -219,11 +236,28 @@ The server listens on `http://localhost:5000` by default. Visit `http://localhos
 
 ## Available scripts
 
-| Command                  | Description                                                            |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `npm run dev`            | Starts the TypeScript server in watch mode with `tsx`.                 |
-| `npm run build`          | Compiles TypeScript into the `dist` directory.                         |
-| `npm start`              | Starts the compiled application from `dist/server.js`.                 |
+| Command                  | Description                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `npm run dev`            | Starts the TypeScript server in watch mode with `tsx`.                                          |
+| `npm run build`          | Generates Prisma Client (`prisma generate`) and bundles TypeScript with `tsup` into `dist`.    |
+| `npm start`              | Starts the compiled server production bundle from `dist/server.js`.                             |
+| `npx prisma db seed`     | Runs `prisma/seed.ts` via `tsx` to populate default admin, landlord, tenant, and sample data.   |
+
+### Postman Collection & API Testing
+
+A complete Postman collection is included in the project root: `rentNest.postman_collection.json`.
+
+1. Open **Postman** (or Insomnia / Bruno).
+2. Click **Import** and select `rentNest.postman_collection.json`.
+3. Set your collection variable or request base URL to `http://localhost:5000` (or your deployed server base URL).
+4. The collection contains pre-built requests for:
+   - Authentication (Registration, Login, User profile)
+   - Public Properties & Categories
+   - Landlord Property & Request Management
+   - Tenant Rental Requests
+   - Stripe Payments & Webhooks
+   - Property Reviews
+   - Admin Management (Users, Properties, Rentals)
 
 ### Optional local Stripe webhook script
 
@@ -988,19 +1022,31 @@ Returns platform-wide rental requests with `id`, `propertyId`, `tenantId`, `stat
 
 ## Deployment notes
 
-For a production deployment:
+### Deployment on Vercel Serverless
 
-1. Set `MODE=production`.
-2. Set `APP_URL` to the exact deployed frontend origin so CORS and Stripe redirects work.
-3. Add every production environment variable in the hosting provider's project settings; do not upload `.env`.
-4. Use a publicly reachable HTTPS URL for the Stripe webhook endpoint:
+This project includes pre-configured Vercel deployment files (`vercel.json` and `tsup.config.ts`):
 
-   ```text
-   https://your-api-domain.com/api/payments/webhook
+1. **Build Step**: Vercel automatically runs `npm run build` (`prisma generate && tsup`), which generates the Prisma Client and bundles the app into `dist/server.js`.
+2. **Serverless Entrypoint**: `vercel.json` directs all HTTP requests to `dist/server.js` using `@vercel/node`.
+3. **Environment Variables**: Add all production environment variables in your Vercel Project Settings:
+   - `DATABASE_URL` (Production PostgreSQL connection string)
+   - `MODE=production`
+   - `APP_URL` (Your frontend web application URL)
+   - `BCRYPT_SALT_ROUNDS=10`
+   - `JWT_ACCESS_SECRET` & `JWT_REFRESH_SECRET`
+   - `STRIPE_SECRET_KEY` & `STRIPE_WEBHOOK_SECRET`
+
+4. **Stripe Webhook Configuration**:
+   - Register your deployed Vercel webhook endpoint in the Stripe Dashboard:
+     ```text
+     https://<your-vercel-domain>.vercel.app/api/payments/webhook
+     ```
+   - Copy the Webhook Signing Secret (`whsec_...`) from Stripe and paste it into `STRIPE_WEBHOOK_SECRET` in Vercel environment settings.
+
+5. **Prisma Migrations**: Run database migrations against your production PostgreSQL database prior to deploying:
+   ```bash
+   npx prisma migrate deploy
    ```
-
-5. Add the webhook endpoint in Stripe Dashboard and copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
-6. Use a production PostgreSQL connection string and run Prisma migrations against it before accepting traffic.
 
 ## Current limitations and future improvements
 
