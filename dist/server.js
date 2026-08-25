@@ -1334,19 +1334,32 @@ var createPaymentSession = async (userId, rentalRequestId) => {
     paymentUrl: transactionResult
   };
 };
-var handleWebhook = async (payload, signature) => {
+var handleWebhook = async (payload, signature, res) => {
   const endpointSecret = config_default.stripe_webhook_secret;
-  const event = stripe.webhooks.constructEvent(
-    payload,
-    signature,
-    endpointSecret
-  );
-  switch (event.type) {
-    case "checkout.session.completed":
-      await handleCheckoutCompleted(event.data.object);
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}.`);
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      endpointSecret
+    );
+  } catch (err) {
+    console.error(`Stripe Signature Verification Failed: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+        console.log("Processing checkout.session.completed...");
+        await handleCheckoutCompleted(event.data.object);
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}.`);
+    }
+    return res.status(200).json({ received: true });
+  } catch (dbErr) {
+    console.error("\u274C Database/Fulfillment Error inside webhook:", dbErr.message);
+    return res.status(500).send(`Fulfillment Error: ${dbErr.message}`);
   }
 };
 var getPaymentHistoryFromDB = async (id) => {

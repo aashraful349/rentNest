@@ -95,6 +95,8 @@ const createPaymentSession = async (
 const handleWebhook = async (payload: Buffer, signature: string, res: any) => {
   const endpointSecret = config.stripe_webhook_secret;
   let event;
+
+  // 1. Catch Stripe verification signature errors safely
   try {
     event = stripe.webhooks.constructEvent(
       payload,
@@ -102,9 +104,11 @@ const handleWebhook = async (payload: Buffer, signature: string, res: any) => {
       endpointSecret
     );
   } catch (err: any) {
-    console.error(`Stripe Signature Verification Failed: ${err.message}`);
+    console.error(`❌ Stripe Signature Verification Failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  // 2. Process validated events inside a separate try/catch to protect your DB queries
   try {
     switch (event.type) {
       case 'checkout.session.completed':
@@ -114,10 +118,13 @@ const handleWebhook = async (payload: Buffer, signature: string, res: any) => {
       default:
         console.log(`Unhandled event type ${event.type}.`);
     }
+
+    // Always send a 200 OK back to Stripe for successfully parsed hooks
     return res.status(200).json({ received: true });
 
   } catch (dbErr: any) {
     console.error("❌ Database/Fulfillment Error inside webhook:", dbErr.message);
+    // Returning a 500 explicitly helps you see the actual code path breakdown in Vercel
     return res.status(500).send(`Fulfillment Error: ${dbErr.message}`);
   }
 }
