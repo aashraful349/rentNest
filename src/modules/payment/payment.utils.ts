@@ -40,5 +40,15 @@ export const handleCheckoutCompleted = async (
       status: "COMPLETED", 
     },
   });
+
+  await prisma.property.update({
+    where:{
+      id:propertyId
+    },
+    data:{
+      availability:"UNAVAILABLE"
+    }
+  })
+
 };
 

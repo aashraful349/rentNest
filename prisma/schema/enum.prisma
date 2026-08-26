@@ -31,3 +31,8 @@ enum PaymentStatus {
   COMPLETED
   FAILED
 }
+
+enum PAvailability {
+  AVAILABLE
+  UNAVAILABLE
+}

@@ -42,6 +42,7 @@ if (type) {
     },
     select:{
       id:true,
+      availability:true,
       pName:true,
       pLocation:true,
       pPrice:true,

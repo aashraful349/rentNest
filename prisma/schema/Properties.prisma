@@ -3,6 +3,7 @@ model Property {
   landLordId   String
   user         User     @relation(fields: [landLordId], references: [id], onDelete: Cascade)
   pName        String   @db.VarChar(255)
+  availability PAvailability @default(AVAILABLE)
   pLocation    String   @db.VarChar(255)
   pPrice       Decimal  @db.Decimal(10, 2)
   pDescription String

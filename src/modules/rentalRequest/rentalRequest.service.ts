@@ -9,6 +9,20 @@ const createRentalRequestInDB = async (
 ) => {
   const { propertyId, message } = payload;
 
+  const property = await prisma.property.findUnique({
+    where: {
+      id: propertyId,
+    },
+  });
+
+  if (!property) {
+    throw new AppError("Property not found", httpStatus.NOT_FOUND);
+  }
+
+  if (property.availability === "UNAVAILABLE") {
+    throw new AppError("Property is not available for rent", httpStatus.BAD_REQUEST);
+  }
+
   const result = await prisma.rentalRequest.create({
     data: {
       propertyId,
