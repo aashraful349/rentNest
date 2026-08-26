@@ -36,7 +36,8 @@
                 "auth",
                 "register"
               ]
-            }
+            },
+            "description": "### Register\n\nCreates a new user account on the **rentNest** platform. Both tenants and landlords can register through this endpoint. (Admin accounts cannot be registered via this endpoint).\n\n- **Method:** `POST`\n    \n- **URL:** `http://localhost:5000/api/auth/register`\n    \n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `name` | string | ✅ | Full name of the user |\n| `email` | string | ✅ | Unique valid email address |\n| `password` | string | ✅ | Account password (hashed by server) |\n| `role` | string | ✅ | User role: `TENANT` or `LANDLORD` (case-insensitive, normalized to uppercase) |\n| `phone` | string | ❌ | Contact phone number (defaults to `\"Phone not provided\"`) |\n| `image` | string | ❌ | Profile image URL (defaults to `\"Image not provided\"`) |\n| `bio` | string | ❌ | User biography (defaults to `\"Bio not provided\"`) |\n\n#### Authentication\n\nNo authentication required. This is a public endpoint.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | User registered successfully. Returns the created user object (without token or password hash). |\n| **`400 Bad Request`** | Missing required fields, invalid role provided (e.g. attempting to register as `ADMIN`), or malformed body. |\n| **`409 Conflict`** | A user with the provided email already exists. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"id\": \"c1f7b3e0-8a21-4f9d-b712-3456789abcde\",\n    \"name\": \"Amina Rahman\",\n    \"email\": \"amina@example.com\",\n    \"image\": \"Image not provided\",\n    \"bio\": \"Bio not provided\",\n    \"phone\": \"+8801700000000\",\n    \"role\": \"TENANT\",\n    \"activeStatus\": \"ACTIVE\",\n    \"createdAt\": \"2026-08-26T09:44:30.000Z\",\n    \"updatedAt\": \"2026-08-26T09:44:30.000Z\"\n  }\n}\n\n ```"
           },
           "response": []
         },
@@ -66,7 +67,8 @@
                 "auth",
                 "login"
               ]
-            }
+            },
+            "description": "## Login User\n\nAuthenticates an existing user and returns a **Bearer token** to be used in subsequent authenticated requests.\n\n**Method:** `POST`  \n**URL:** `http://localhost:5000/api/auth/login`\n\n---\n\n### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `email` | string | ✅ | Registered email address |\n| `password` | string | ✅ | Account password |\n\n### Authentication\n\nNo authentication required. This is a public endpoint.\n\n---\n\n### Expected Response\n\n| Status | Description |\n| --- | --- |\n| `200 OK` | Login successful. Returns a JWT Bearer token and user profile. |\n| `400 Bad Request` | Missing email or password. |\n| `401 Unauthorized` | Invalid credentials. |\n\n> **Note:** Copy the returned `token` and set it as a Bearer token in the `Authorization` header for all protected endpoints."
           },
           "response": []
         },
@@ -74,7 +76,8 @@
           "name": "getMe",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "description": "## Get Me\n\nReturns the profile information of the **currently authenticated user** based on the provided Bearer token.\n\n**Method:** `GET`\n**URL:** `http://localhost:5000/api/auth/me`\n\n---\n\n### Authentication\n\n🔒 **Required** — Bearer token must be included in the `Authorization` header.\n\n```\nAuthorization: Bearer <your_token>\n```\n\n---\n\n### Expected Response\n\n| Status | Description |\n|--------|-------------|\n| `200 OK` | Returns the authenticated user's profile (id, name, email, role, etc.). |\n| `401 Unauthorized` | Missing or invalid Bearer token. |\n\n> Use this endpoint to verify the current session or retrieve user details after login."
           },
           "response": []
         }
@@ -109,7 +112,8 @@
                 "landlord",
                 "properties"
               ]
-            }
+            },
+            "description": "**Create New Property**\n\nAllows an authenticated landlord to list a new rental property on the **rentNest** platform. A category is created automatically alongside the property listing. Landlords do not provide `availability` in the request body; property availability defaults to `AVAILABLE` automatically upon creation.\n\n- **Method:** `POST`\n    \n- **URL:** `http://localhost:5000/api/landlord/properties`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of a `LANDLORD` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <landlord_token>\n\n ```\n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `pName` | string | ✅ | Property name / title |\n| `pLocation` | string | ✅ | Property location or address |\n| `pPrice` | number | ✅ | Rental price (in BDT) |\n| `pDescription` | string | ✅ | Full property description |\n| `type` | string | ✅ | Property type enum: `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, `OTHER` (case-insensitive) |\n| `pImage` | string | ❌ | Property image URL (defaults to `\"Image not provided\"`) |\n| `description` | string | ❌ | Category description (defaults to `\"Description not provided\"`) |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Property created successfully. Returns the new property object and nested category. |\n| **`400 Bad Request`** | Missing required fields (`pName`, `pLocation`, `pPrice`, `pDescription`, `type`) or invalid `type` value. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not a landlord (or account is blocked). |"
           },
           "response": []
         },
@@ -140,7 +144,8 @@
                 "properties",
                 "aaec7e9a-4fbe-46ff-b9f0-1c9ea1cdc656"
               ]
-            }
+            },
+            "description": "**Update Property**\n\nAllows an authenticated landlord to update details of a property they own. Any omitted fields retain their existing values.\n\n- **Method:** `PUT`\n    \n- **URL:** `http://localhost:5000/api/landlord/properties/:id`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of the property-owning `LANDLORD` must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <landlord_token>\n\n ```\n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `id` | string (UUID) | ✅ | The unique ID of the property to update |\n\n#### Request Body\n\nProvide any subset of the fields you wish to update:\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `pName` | string | Updated property title |\n| `pLocation` | string | Updated location or address |\n| `pPrice` | number | Updated monthly rental price (in BDT) |\n| `pDescription` | string | Updated property description |\n| `type` | string | Updated category type enum: `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, `OTHER` |\n| `pImage` | string | Updated property image URL |\n| `description` | string | Updated category description |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Property updated successfully. Returns the updated property object and category. |\n| **`400 Bad Request`** | Empty request body or missing property ID path parameter. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated landlord does not own this property. |\n| **`404 Not Found`** | Property with the given ID does not exist. |"
           },
           "response": []
         },
@@ -166,7 +171,8 @@
                 "properties",
                 "c6d4cb1b-5249-4b99-9410-4322f3ffcadb"
               ]
-            }
+            },
+            "description": "**Delete Property**\n\nAllows an authenticated landlord to permanently delete a property listing that they own. Associated category, rental requests, and reviews are removed per database cascade relations.\n\n- **Method:** `DELETE`\n    \n- **URL:** `http://localhost:5000/api/landlord/properties/:id`\n    \n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `id` | string (UUID) | ✅ | The unique ID of the property to delete |\n\n#### Request Body\n\nNone.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Property deleted successfully. |\n| **`400 Bad Request`** | Missing property ID path parameter. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated landlord does not own this property. |\n| **`404 Not Found`** | Property with the given ID does not exist. |\n\n> \\[!WARNING\\]  \nThis action is irreversible. Associated category, rental request, and review records will be removed automatically via database cascade constraints."
           },
           "response": []
         },
@@ -174,7 +180,8 @@
           "name": "get all request",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "description": "---\n\n### Get All Rental Requests (Landlord)\n\nRetrieves all rental requests submitted across all properties owned by the authenticated landlord.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/landlord/properties/requests` (or `http://localhost:5000/api/landlord/requests`)\n    \n\n#### Query Parameters\n\nNone. The endpoint automatically fetches all rental requests for all properties owned by the logged-in landlord.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Rental requests fetched successfully. Returns an array of rental request objects. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not a landlord (or account is blocked). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Rental requests fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"request-uuid-1\",\n      \"propertyId\": \"property-uuid-1\",\n      \"tenantId\": \"tenant-uuid-1\",\n      \"message\": \"I would like to rent this property from next month.\",\n      \"status\": \"PENDING\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n      \"updatedAt\": \"2026-08-26T09:00:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -205,7 +212,8 @@
                 "requests",
                 "fa394ad9-0bbe-4aae-a126-4189fea06977"
               ]
-            }
+            },
+            "description": "## Approve or Reject Rental Request\n\nAllows an authenticated **landlord** to approve or reject a tenant's rental request for one of their properties.\n\n**Method:** `PATCH`  \n**URL:** `http://localhost:5000/api/landlord/requests/:requestId`\n\n---\n\n### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `requestId` | string (UUID) | ✅ | The unique ID of the rental request to act upon |\n\n### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `status` | string | ✅ | New status for the request: `approved` or `rejected` |\n| `message` | string | ❌ | Optional message to the tenant explaining the decision |\n\n---\n\n### Expected Response\n\n| Status | Description |\n| --- | --- |\n| `200 OK` | Request status updated successfully. Returns the updated rental request. |\n| `400 Bad Request` | Invalid status value provided. |\n| `401 Unauthorized` | Missing or invalid Bearer token. |\n| `403 Forbidden` | Landlord does not own the property associated with this request. |\n| `404 Not Found` | Rental request with the given ID does not exist. |"
           },
           "response": []
         }
@@ -231,7 +239,8 @@
                 "properties",
                 "aaec7e9a-4fbe-46ff-b9f0-1c9ea1cdc656"
               ]
-            }
+            },
+            "description": "**Get Property Details by ID**\n\nRetrieves the full details of a specific rental property by its unique ID, including its availability status and category details.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/properties/:id`\n    \n\n#### Authentication\n\n🔓 **Not required** — This is a public endpoint.\n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `id` | string (UUID) | ✅ | The unique ID of the property to retrieve |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Property fetched successfully. Returns the full property object and nested category. |\n| **`400 Bad Request`** | Missing property ID parameter in URL path. |\n| **`404 Not Found`** | Property with the given ID does not exist. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Property fetched successfully\",\n  \"data\": {\n    \"id\": \"e4b2a8d1-5f33-4c91-b8d9-123456789abc\",\n    \"landLordId\": \"user-uuid\",\n    \"pName\": \"Lakeview Apartment\",\n    \"availability\": \"AVAILABLE\",\n    \"pLocation\": \"Gulshan, Dhaka\",\n    \"pPrice\": \"25000.00\",\n    \"pDescription\": \"A furnished two-bedroom apartment near Gulshan Lake.\",\n    \"pImage\": \"https://example.com/lakeview.jpg\",\n    \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n    \"updatedAt\": \"2026-08-26T09:00:00.000Z\",\n    \"category\": {\n      \"id\": \"category-uuid\",\n      \"type\": \"APARTMENT\",\n      \"description\": \"Residential two-bedroom apartment\",\n      \"propertyId\": \"e4b2a8d1-5f33-4c91-b8d9-123456789abc\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n      \"updatedAt\": \"2026-08-26T09:00:00.000Z\"\n    }\n  }\n}\n\n ```"
           },
           "response": []
         },
@@ -252,7 +261,8 @@
                 "properties",
                 "aaec7e9a-4fbe-46ff-b9f0-1c9ea1cdc656"
               ]
-            }
+            },
+            "description": "### Get All Properties\n\nRetrieves a list of properties. Supports optional filtering by location, exact price, and property type.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/properties`\n    \n\n#### Authentication\n\n🔓 **Not required** — This is a public endpoint.\n\n#### Query Parameters (Optional)\n\n| Parameter | Type | Description |\n| --- | --- | --- |\n| `location` | string | Case-insensitive partial match against property location (`pLocation`) |\n| `price` | number | Exact rental price match (`pPrice`) |\n| `type` | string | Category type filter: `APARTMENT`, `HOUSE`, `STUDIO`, `OFFICE`, `SHOP`, `WAREHOUSE`, `LAND`, `OTHER` (case-insensitive) |\n\n_Example Query URLs:_\n\n``` text\nGET /api/properties\nGET /api/properties?location=dhaka\nGET /api/properties?price=25000&type=APARTMENT\n\n ```\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Properties fetched successfully. Returns an array of property summary objects containing `id`, `availability`, `pName`, `pLocation`, `pPrice`, `category` (`id`, `type`), and `createdAt`. |\n| **`404 Not Found`** | No properties found matching the supplied query filters. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Properties fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"e4b2a8d1-5f33-4c91-b8d9-123456789abc\",\n      \"availability\": \"AVAILABLE\",\n      \"pName\": \"Lakeview Apartment\",\n      \"pLocation\": \"Gulshan, Dhaka\",\n      \"pPrice\": \"25000.00\",\n      \"category\": {\n        \"id\": \"category-uuid\",\n        \"type\": \"APARTMENT\"\n      },\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         }
@@ -265,7 +275,8 @@
           "name": "get categories",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "description": "## Get Categories\n\nRetrieves all property categories available on the rentNest platform. Categories are used to classify properties (e.g., apartment, house, studio, villa).\n\n**Method:** `GET`\n**URL:** `http://localhost:5000/api/categories`\n\n---\n\n### Authentication\n\n🔓 **Not required.** This is a public endpoint.\n\n---\n\n### Expected Response\n\n| Status | Description |\n|--------|-------------|\n| `200 OK` | Returns an array of category objects, each containing an `id` and `name`. |\n\n> Use the returned category `id` values when creating or filtering properties."
           },
           "response": []
         }
@@ -299,7 +310,8 @@
                 "api",
                 "rentals"
               ]
-            }
+            },
+            "description": "### Create New Rental Request\n\nAllows an authenticated tenant to submit a rental request for an available property listed on **rentNest**. Requests can only be submitted for properties with `availability: AVAILABLE`. New requests start with a default status of `PENDING`.\n\n- **Method:** `POST`\n    \n- **URL:** `http://localhost:5000/api/rentals`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of a `TENANT` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <tenant_token>\n\n ```\n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `propertyId` | string (UUID) | ✅ | The ID of the property the tenant wants to rent |\n| `message` | string | ❌ | Message to the landlord (defaults to `\"No message left by tenant\"`) |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Rental request created successfully. Returns the new rental request object with status `PENDING`. |\n| **`400 Bad Request`** | Missing required field (`propertyId`), or the property is not available for rent (`Property is not available for rent`). |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not authorized or account is blocked. |\n| **`404 Not Found`** | Property with the given `propertyId` does not exist. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Rental request created successfully\",\n  \"data\": {\n    \"id\": \"rental-request-uuid\",\n    \"propertyId\": \"property-uuid\",\n    \"tenantId\": \"tenant-uuid\",\n    \"message\": \"I would like to rent this property from next month.\",\n    \"status\": \"PENDING\",\n    \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n    \"updatedAt\": \"2026-08-26T09:00:00.000Z\"\n  }\n}\n\n ```"
           },
           "response": []
         },
@@ -319,7 +331,8 @@
                 "api",
                 "rentals"
               ]
-            }
+            },
+            "description": "### Get All Rental Requests (Tenant)\n\nRetrieves all rental requests submitted by the currently authenticated tenant, ordered newest first.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/rentals`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of a `TENANT` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <tenant_token>\n\n ```\n\n#### Query Parameters\n\nNone. The endpoint fetches all rental requests belonging to the logged-in tenant.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Rental requests fetched successfully. Returns an array of rental request objects containing `id`, `propertyId`, `tenantId`, `status`, and `createdAt`. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`404 Not Found`** | Tenant has not submitted any rental requests (`No rental requests found for this user`). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Rental requests fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"rental-request-uuid\",\n      \"propertyId\": \"property-uuid\",\n      \"tenantId\": \"tenant-uuid\",\n      \"status\": \"PENDING\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -339,7 +352,8 @@
                 "api",
                 "rentals"
               ]
-            }
+            },
+            "description": "### Get Rental Details\n\nRetrieves full details of a specific rental request owned by the authenticated tenant, including summary info of the associated property.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/rentals/:id`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of the `TENANT` who created the request must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <tenant_token>\n\n ```\n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `id` | string (UUID) | ✅ | The unique ID of the rental request to retrieve |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Rental request fetched successfully. Returns the rental request object along with nested property details. |\n| **`400 Bad Request`** | Missing rental request ID in URL path. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not the tenant who submitted this rental request. |\n| **`404 Not Found`** | Rental request with the given ID does not exist. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Rental request fetched successfully\",\n  \"data\": {\n    \"id\": \"rental-request-uuid\",\n    \"propertyId\": \"property-uuid\",\n    \"tenantId\": \"tenant-uuid\",\n    \"message\": \"I would like to rent this property from next month.\",\n    \"status\": \"PENDING\",\n    \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n    \"updatedAt\": \"2026-08-26T09:00:00.000Z\",\n    \"property\": {\n      \"id\": \"property-uuid\",\n      \"pName\": \"Lakeview Apartment\",\n      \"pLocation\": \"Gulshan, Dhaka\",\n      \"pPrice\": \"25000.00\",\n      \"pDescription\": \"A furnished two-bedroom apartment near Gulshan Lake.\"\n    }\n  }\n}\n\n ```"
           },
           "response": []
         }
@@ -374,7 +388,8 @@
                 "payments",
                 "create"
               ]
-            }
+            },
+            "description": "### Create Payment Session\n\nInitiates a Stripe-hosted Checkout session for an approved rental request owned by the authenticated tenant. The API returns a `paymentUrl` to redirect the tenant to Stripe Checkout.\n\n- **Method:** `POST`\n    \n- **URL:** `http://localhost:5000/api/payments/create`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of a `TENANT` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <tenant_token>\n\n ```\n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `rentalRequestId` | string (UUID) | ✅ | The unique ID of an approved rental request owned by the current tenant |\n\n``` json\n{\n  \"rentalRequestId\": \"71991bba-752e-4b79-b92a-331730b3b76e\"\n}\n\n ```\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Payment session created successfully. Returns the Stripe Checkout URL. |\n| **`400 Bad Request`** | Missing `rentalRequestId` field in the request body. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Tenant does not own this rental request, OR the rental request status is not `APPROVED`. |\n| **`404 Not Found`** | Rental request with the given ID does not exist. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Payment session created successfully\",\n  \"data\": {\n    \"paymentUrl\": \"https://checkout.stripe.com/c/pay/cs_test_a1b2c3d4e5f6...\"\n  }\n}\n\n ```"
           },
           "response": []
         },
@@ -402,7 +417,8 @@
                 "payments",
                 ""
               ]
-            }
+            },
+            "description": "### Get Payment History\n\nRetrieves the complete payment history for the currently authenticated user, ordered newest first.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/payments`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of an authenticated user (`TENANT` or `LANDLORD`) must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <your_token_here>\n\n ```\n\n#### Query Parameters / Request Body\n\nNone.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Payment history fetched successfully. Returns an array of payment transaction objects. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`404 Not Found`** | No payment history found for the authenticated user (`No payment history found for this user`). |\n\n#### Payment Record Object Fields\n\n| Field | Type | Description |\n| --- | --- | --- |\n| `id` | string (UUID) | Unique identifier of the payment record |\n| `userId` | string (UUID) | UUID of the user who completed the payment |\n| `amount` | Decimal / number | Payment amount |\n| `status` | string | Payment status enum: `PENDING`, `COMPLETED`, `FAILED` |\n| `createdAt` | string (ISO 8601) | Timestamp when the payment was created |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Payment history fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"9401e294-9da2-4175-b655-759cc5b5850f\",\n      \"userId\": \"d00372ba-8ba2-48be-9e69-6d82e70577ee\",\n      \"amount\": \"25000.00\",\n      \"status\": \"COMPLETED\",\n      \"createdAt\": \"2026-08-26T03:39:05.519Z\"\n    },\n    {\n      \"id\": \"72267002-89dc-45f6-aa60-19c1154a345f\",\n      \"userId\": \"d00372ba-8ba2-48be-9e69-6d82e70577ee\",\n      \"amount\": \"18000.00\",\n      \"status\": \"COMPLETED\",\n      \"createdAt\": \"2026-08-25T20:24:56.348Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -430,7 +446,8 @@
                 "payments",
                 ""
               ]
-            }
+            },
+            "description": "## Get Payment Details\n\nRetrieves the full details of a specific payment transaction by its unique payment ID. This endpoint is useful for tracking payment status, verifying Stripe transaction references, and viewing associated user and rental request information.\n\n---\n\n### Endpoint\n\n```\nGET /api/payments/:paymentId\n```\n\n---\n\n### URL Path Parameter\n\n| Parameter   | Type   | Required | Description                                      |\n|-------------|--------|----------|--------------------------------------------------|\n| `paymentId` | UUID   | ✅ Yes   | The unique identifier of the payment to retrieve. |\n\n**Example:**\n```\nGET /api/payments/9401e294-9da2-4175-b655-759cc5b5850f\n```\n\n---\n\n### Authentication\n\n> 🔒 **Authentication required.** This endpoint is protected and requires a valid Bearer token in the `Authorization` header. Only authorized users (e.g., the tenant who made the payment or an admin) should be able to access payment details.\n\n```\nAuthorization: Bearer <your_token>\n```\n\n---\n\n### Response\n\n**Status:** `200 OK`\n\nReturns a payment object with full details including the associated user and rental request.\n\n#### Response Fields\n\n| Field               | Type     | Description                                                  |\n|---------------------|----------|--------------------------------------------------------------|\n| `id`                | UUID     | Unique identifier of the payment.                            |\n| `userId`            | UUID     | ID of the user (tenant) who made the payment.                |\n| `rentalRequestId`   | UUID     | ID of the rental request linked to this payment.             |\n| `status`            | String   | Payment status (e.g., `COMPLETED`, `PENDING`, `FAILED`).     |\n| `stripeCustomerId`  | String   | Stripe customer ID associated with the transaction.          |\n| `stripePaymentId`   | String   | Stripe payment intent ID for the transaction.                |\n| `amount`            | Number   | Payment amount (in the platform's base currency unit).       |\n| `createdAt`         | DateTime | Timestamp when the payment record was created.               |\n| `updatedAt`         | DateTime | Timestamp when the payment record was last updated.          |\n| `user`              | Object   | Nested user object with `id`, `name`, `email`, and `role`.   |\n| `rentalRequest`     | Object   | Nested rental request with `id`, `status`, and `property`.  |\n\n#### Nested `user` Object\n\n| Field   | Type   | Description                          |\n|---------|--------|--------------------------------------|\n| `id`    | UUID   | User's unique ID.                    |\n| `name`  | String | User's display name.                 |\n| `email` | String | User's email address.                |\n| `role`  | String | User's role (e.g., `TENANT`).        |\n\n#### Nested `rentalRequest` Object\n\n| Field      | Type   | Description                                          |\n|------------|--------|------------------------------------------------------|\n| `id`       | UUID   | Rental request's unique ID.                          |\n| `status`   | String | Status of the rental request (e.g., `APPROVED`).    |\n| `property` | Object | Property details: `id`, `pName`, `pLocation`, `pPrice`. |\n\n#### Example Response\n\n```json\n{\n  \"success\": true,\n  \"message\": \"Payment details fetched successfully\",\n  \"data\": {\n    \"id\": \"9401e294-9da2-4175-b655-759cc5b5850f\",\n    \"userId\": \"d00372ba-8ba2-48be-9e69-6d82e70577ee\",\n    \"rentalRequestId\": \"71991bba-752e-4b79-b92a-331730b3b76e\",\n    \"status\": \"COMPLETED\",\n    \"stripeCustomerId\": \"cus_V8pJ3JXf7EreX4\",\n    \"stripePaymentId\": \"pi_3U8Xg3B1LFa2TVyR0D0rUB82\",\n    \"amount\": 1000,\n    \"createdAt\": \"2026-08-26T03:39:05.519Z\",\n    \"updatedAt\": \"2026-08-26T03:39:05.519Z\",\n    \"user\": {\n      \"id\": \"d00372ba-8ba2-48be-9e69-6d82e70577ee\",\n      \"name\": \"tenant1\",\n      \"email\": \"tenant1@mail.com\",\n      \"role\": \"TENANT\"\n    },\n    \"rentalRequest\": {\n      \"id\": \"71991bba-752e-4b79-b92a-331730b3b76e\",\n      \"status\": \"APPROVED\",\n      \"property\": {\n        \"id\": \"3af21dbd-7b19-46a9-9f4a-b0848aeebbad\",\n        \"pName\": \"Apartment 2\",\n        \"pLocation\": \"Mirpur\",\n        \"pPrice\": \"1000\"\n      }\n    }\n  }\n}\n```"
           },
           "response": []
         }
@@ -440,7 +457,7 @@
       "name": "review",
       "item": [
         {
-          "name": "New Request",
+          "name": "create review",
           "request": {
             "method": "POST",
             "header": [],
@@ -464,7 +481,8 @@
                 "api",
                 "reviews"
               ]
-            }
+            },
+            "description": "### Create Review\n\nAllows an authenticated tenant to submit a review for a completed, paid rental request. The review is automatically linked to the associated property.\n\n- **Method:** `POST`\n    \n- **URL:** `http://localhost:5000/api/reviews`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of a `TENANT` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <tenant_token>\n\n ```\n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `rentalRequestId` | string (UUID) | ✅ | The unique ID of the rental request paid by the tenant |\n| `title` | string | ✅ | Short title for the review |\n| `description` | string | ✅ | Review content or feedback |\n\n``` json\n{\n  \"rentalRequestId\": \"rental-request-uuid\",\n  \"title\": \"Excellent location\",\n  \"description\": \"The property was clean, well maintained, and exactly as described.\"\n}\n\n ```\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Review created successfully. Returns the new review object. |\n| **`400 Bad Request`** | Payment for the rental request is not completed, or tenant has already created a review for this request (`You have already created a review for this rental request`). |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user did not make the payment for this rental request (`You are not authorized to create review for this rental request`). |\n| **`404 Not Found`** | Payment record not found for the supplied `rentalRequestId`. |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Review created successfully\",\n  \"data\": {\n    \"id\": \"review-uuid\",\n    \"tenantId\": \"tenant-uuid\",\n    \"propertyId\": \"property-uuid\",\n    \"rentalRequestId\": \"rental-request-uuid\",\n    \"title\": \"Excellent location\",\n    \"description\": \"The property was clean, well maintained, and exactly as described.\",\n    \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n    \"updatedAt\": \"2026-08-26T09:00:00.000Z\"\n  }\n}\n\n ```"
           },
           "response": []
         },
@@ -472,7 +490,8 @@
           "name": "getReviewByPropertyID",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "description": "### Get Reviews by Property ID\n\nRetrieves all reviews submitted for a specific property by its unique ID, including the reviewer's name and email.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/reviews/:propertyId`\n    \n\n#### Authentication\n\n🔓 **Not required** — This is a public endpoint.\n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `propertyId` | string (UUID) | ✅ | The unique ID of the property whose reviews are being retrieved |\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Reviews fetched successfully. Returns an array of review objects including title, description, timestamps, and nested reviewer info (`name`, `email`). |\n| **`404 Not Found`** | No reviews found for the specified property (`No reviews found for this property`). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Reviews fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"review-uuid\",\n      \"tenantId\": \"tenant-uuid\",\n      \"propertyId\": \"property-uuid\",\n      \"rentalRequestId\": \"rental-request-uuid\",\n      \"title\": \"Excellent location\",\n      \"description\": \"The property was clean, well maintained, and exactly as described.\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n      \"updatedAt\": \"2026-08-26T09:00:00.000Z\",\n      \"user\": {\n        \"name\": \"Amina Rahman\",\n        \"email\": \"amina@example.com\"\n      }\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         }
@@ -485,7 +504,8 @@
           "name": "getAllUsers",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "description": "### Get All Users (Admin)\n\nAdmin-only endpoint to retrieve a list of all registered users on the **rentNest** platform across all roles (`TENANT`, `LANDLORD`, `ADMIN`).\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/admin/users`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of an `ADMIN` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <admin_token>\n\n ```\n\n#### Query Parameters\n\nNone. The endpoint fetches all registered user records.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Users fetched successfully. Returns an array of user summary objects (`id`, `name`, `email`, `role`, `activeStatus`, `createdAt`). |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not an administrator. |\n| **`404 Not Found`** | No users exist in the database (`No users found`). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Users fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"user-uuid-1\",\n      \"name\": \"Amina Rahman\",\n      \"email\": \"amina@example.com\",\n      \"role\": \"TENANT\",\n      \"activeStatus\": \"ACTIVE\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\"\n    },\n    {\n      \"id\": \"user-uuid-2\",\n      \"name\": \"Rahim Uddin\",\n      \"email\": \"rahim@example.com\",\n      \"role\": \"LANDLORD\",\n      \"activeStatus\": \"ACTIVE\",\n      \"createdAt\": \"2026-08-26T08:30:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -506,7 +526,8 @@
                 "admin",
                 "properties"
               ]
-            }
+            },
+            "description": "### Get All Properties (Admin)\n\nAdmin-only endpoint to retrieve platform-wide property listings across all landlords.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/admin/properties`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of an `ADMIN` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <admin_token>\n\n ```\n\n#### Query Parameters\n\nNone. The endpoint retrieves platform-wide property records.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Properties fetched successfully. Returns an array of property objects containing `id`, `landLordId`, `pName`, `pLocation`, `pPrice`, `pDescription`, and `createdAt`. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not an administrator. |\n| **`404 Not Found`** | No properties exist in the platform database (`No properties found`). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Properties fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"e4b2a8d1-5f33-4c91-b8d9-123456789abc\",\n      \"landLordId\": \"landlord-uuid-1\",\n      \"pName\": \"Lakeview Apartment\",\n      \"pLocation\": \"Gulshan, Dhaka\",\n      \"pPrice\": \"25000.00\",\n      \"pDescription\": \"A furnished two-bedroom apartment near Gulshan Lake.\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -527,7 +548,8 @@
                 "admin",
                 "properties"
               ]
-            }
+            },
+            "description": "### Get All Rental Requests (Admin)\n\nAdmin-only endpoint to retrieve platform-wide rental requests across all tenants and properties.\n\n- **Method:** `GET`\n    \n- **URL:** `http://localhost:5000/api/admin/rentals`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of an `ADMIN` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <admin_token>\n\n ```\n\n#### Query Parameters\n\nNone. The endpoint retrieves all platform-wide rental requests.\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | Rental requests fetched successfully. Returns an array of rental request summary objects (`id`, `propertyId`, `tenantId`, `status`, `createdAt`). |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not an administrator. |\n| **`404 Not Found`** | No rental requests exist across the platform (`No rental requests found`). |\n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Rental requests fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"rental-request-uuid-1\",\n      \"propertyId\": \"property-uuid-1\",\n      \"tenantId\": \"tenant-uuid-1\",\n      \"status\": \"APPROVED\",\n      \"createdAt\": \"2026-08-26T09:00:00.000Z\"\n    },\n    {\n      \"id\": \"rental-request-uuid-2\",\n      \"propertyId\": \"property-uuid-2\",\n      \"tenantId\": \"tenant-uuid-2\",\n      \"status\": \"PENDING\",\n      \"createdAt\": \"2026-08-26T10:15:00.000Z\"\n    }\n  ]\n}\n\n ```"
           },
           "response": []
         },
@@ -558,7 +580,8 @@
                 "users",
                 "d00372ba-8ba2-48be-9e69-6d82e70577ee"
               ]
-            }
+            },
+            "description": "### Update User Active Status (Admin)\n\nAdmin-only endpoint to update a user's account status (`ACTIVE` or `BLOCKED`) by their user ID. A blocked user cannot log in or access protected platform resources.\n\n- **Method:** `PATCH`\n    \n- **URL:** `http://localhost:5000/api/admin/users/:id`\n    \n\n#### Authentication\n\n🔒 **Required** — Bearer token of an `ADMIN` account must be included in the `Authorization` header (or as an `accessToken` cookie).\n\n``` http\nAuthorization: Bearer <admin_token>\n\n ```\n\n#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `id` | string (UUID) | ✅ | The unique ID of the user whose status is being updated |\n\n#### Request Body\n\n| Field | Type | Required | Description |\n| --- | --- | --- | --- |\n| `status` | string | ✅ | Account status enum: `ACTIVE` or `BLOCKED` |\n\n``` json\n{\n  \"status\": \"BLOCKED\"\n}\n\n ```\n\n#### Expected Response\n\n| Status | Description |\n| --- | --- |\n| **`200 OK`** | User status updated successfully. Returns the updated user object. |\n| **`400 Bad Request`** | Missing required `status` field or missing user ID parameter. |\n| **`401 Unauthorized`** | Missing or invalid Bearer token / login session. |\n| **`403 Forbidden`** | Authenticated user is not an administrator. |\n| **`404 Not Found`** | User with the given ID does not exist in the database. |\n\n> \\[!WARNING\\]  \nBlocking a user (`status: \"BLOCKED\"`) prevents them from logging in or using protected API endpoints. \n  \n\n#### Example Response (`200 OK`)\n\n``` json\n{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"User status updated successfully\",\n  \"data\": {\n    \"id\": \"user-uuid-1\",\n    \"name\": \"Amina Rahman\",\n    \"email\": \"amina@example.com\",\n    \"role\": \"TENANT\",\n    \"activeStatus\": \"BLOCKED\",\n    \"createdAt\": \"2026-08-26T09:00:00.000Z\",\n    \"updatedAt\": \"2026-08-26T11:44:00.000Z\"\n  }\n}\n\n ```"
           },
           "response": []
         }
