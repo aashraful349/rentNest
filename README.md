@@ -8,6 +8,17 @@ RentNest is a RESTful backend API for a property-rental platform. It supports th
 
 The API is built with Express, TypeScript, Prisma, PostgreSQL, JWT authentication, and Stripe Checkout.
 
+---
+
+## 🔗 Quick Links & Live Demos
+
+- 🌐 **Live API Base URL**: [Live Link](https://rent-nest-ivory.vercel.app/)
+- 📚 **Interactive Postman Documentation**: [Postman Docs](https://documenter.getpostman.com/view/46711953/2sBYAsyCiZ)
+- 💻 **GitHub Repository**: [rentNest Github Repo](https://github.com/aashraful349/rentNest)
+
+---
+
+
 ## Project ER diagram
 
 ![RentNest database ER diagram](./rentNestDBERDiagram.webp)
