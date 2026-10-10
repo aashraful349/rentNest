@@ -669,7 +669,7 @@ import { Router as Router2 } from "express";
 // src/modules/landLord/landLord.service.ts
 import httpStatus4 from "http-status";
 var createPropertyIntoDB = async (payload, landLordId) => {
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description } = payload;
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } = payload;
   const normalizedType = type?.trim().toUpperCase();
   const pType = Object.values(PType);
   if (!pType.includes(normalizedType)) {
@@ -701,6 +701,7 @@ var createPropertyIntoDB = async (payload, landLordId) => {
       pPrice: true,
       pDescription: true,
       pImage: true,
+      feature: true,
       category: {
         select: {
           id: true,
@@ -721,13 +722,15 @@ var updatePropertyInDB = async (req, id, payload) => {
       landLordId: true
     }
   });
-  if (landLordId.landLordId != req.user?.userId) {
+  const isOwner = landLordId.landLordId === req.user?.userId;
+  const isAdmin = req.user?.role?.toUpperCase() === "ADMIN";
+  if (!isOwner && !isAdmin) {
     throw new AppError(
       "You are not the owner of this property.So, you are not authorized to update this property.",
       httpStatus4.FORBIDDEN
     );
   }
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description } = payload;
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } = payload;
   const currentProperty = await prisma.property.findUniqueOrThrow({
     where: {
       id
@@ -746,6 +749,7 @@ var updatePropertyInDB = async (req, id, payload) => {
       pPrice: pPrice ? pPrice : currentProperty.pPrice,
       pDescription: pDescription ? pDescription : currentProperty.pDescription,
       pImage: pImage ? pImage : currentProperty.pImage,
+      feature: feature !== void 0 ? feature : currentProperty.feature,
       category: {
         update: {
           type: type ? type : currentProperty.category?.type,
@@ -761,6 +765,7 @@ var updatePropertyInDB = async (req, id, payload) => {
       pPrice: true,
       pDescription: true,
       pImage: true,
+      feature: true,
       category: {
         select: {
           id: true,
@@ -1322,6 +1327,9 @@ var getRentalRequestById = catchAsync(async (req, res) => {
   if (!tenantId) {
     throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
   }
+  if (!id) {
+    throw new AppError("Rental request ID is required", httpStatus10.BAD_REQUEST);
+  }
   const result = await rentalRequestService.getRentalRequestByIdFromDB(tenantId, id);
   sendResponse_default(res, {
     success: true,
@@ -1802,6 +1810,7 @@ var getAllProperties2 = async () => {
       pLocation: true,
       pPrice: true,
       pDescription: true,
+      feature: true,
       createdAt: true
     }
   });
@@ -1825,10 +1834,34 @@ var getAllRentalRequests2 = async () => {
   }
   return result;
 };
+var updatePropertyFeature = async (propertyId, feature) => {
+  const result = await prisma.property.update({
+    where: {
+      id: propertyId
+    },
+    data: {
+      feature
+    },
+    select: {
+      id: true,
+      landLordId: true,
+      pName: true,
+      pLocation: true,
+      pPrice: true,
+      pDescription: true,
+      feature: true,
+      availability: true,
+      createdAt: true,
+      updatedAt: true
+    }
+  });
+  return result;
+};
 var adminService = {
   getAllUsers,
   updateUserStatus,
   getAllProperties: getAllProperties2,
+  updatePropertyFeature,
   getAllRentalRequests: getAllRentalRequests2
 };
 
@@ -1878,10 +1911,28 @@ var getAllRentalRequests3 = catchAsync(async (req, res, next) => {
     data: result
   });
 });
+var updatePropertyFeature2 = catchAsync(async (req, res, next) => {
+  const propertyId = req.params?.id;
+  const { feature } = req.body;
+  if (!propertyId) {
+    throw new AppError("Property ID is required", httpStatus15.BAD_REQUEST);
+  }
+  if (typeof feature !== "boolean") {
+    throw new AppError("Feature must be a boolean (true or false)", httpStatus15.BAD_REQUEST);
+  }
+  const result = await adminService.updatePropertyFeature(propertyId, feature);
+  sendResponse_default(res, {
+    success: true,
+    status: 200,
+    message: `Property feature status updated to ${feature} successfully`,
+    data: result
+  });
+});
 var adminController = {
   getAllUsers: getAllUsers2,
   updateUserStatus: updateUserStatus2,
   getAllProperties: getAllProperties3,
+  updatePropertyFeature: updatePropertyFeature2,
   getAllRentalRequests: getAllRentalRequests3
 };
 
@@ -1890,6 +1941,7 @@ var router8 = Router8();
 router8.get("/users", auth("ADMIN"), adminController.getAllUsers);
 router8.patch("/users/:id", auth("ADMIN"), adminController.updateUserStatus);
 router8.get("/properties", auth("ADMIN"), adminController.getAllProperties);
+router8.patch("/properties/:id", auth("ADMIN"), adminController.updatePropertyFeature);
 router8.get("/rentals", auth("ADMIN"), adminController.getAllRentalRequests);
 var adminRoute = router8;
 

@@ -69,9 +69,32 @@ const getAllRentalRequests=catchAsync(async(req:Request,res:Response,next:NextFu
 })
 
 
+const updatePropertyFeature = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const propertyId = req.params?.id as string;
+    const { feature } = req.body;
+
+    if (!propertyId) {
+        throw new AppError("Property ID is required", httpStatus.BAD_REQUEST);
+    }
+
+    if (typeof feature !== "boolean") {
+        throw new AppError("Feature must be a boolean (true or false)", httpStatus.BAD_REQUEST);
+    }
+
+    const result = await adminService.updatePropertyFeature(propertyId, feature);
+
+    sendResponse(res, {
+        success: true,
+        status: 200,
+        message: `Property feature status updated to ${feature} successfully`,
+        data: result
+    });
+});
+
 export const adminController={
     getAllUsers,
     updateUserStatus,
     getAllProperties,
+    updatePropertyFeature,
     getAllRentalRequests
 }

@@ -61,6 +61,7 @@ const getAllProperties=async()=>{
             pLocation:true,
             pPrice:true,
             pDescription:true,
+            feature:true,
             createdAt:true
         }
     })
@@ -93,9 +94,35 @@ const getAllRentalRequests=async()=>{
 
 }
 
+const updatePropertyFeature = async (propertyId: string, feature: boolean) => {
+    const result = await prisma.property.update({
+        where: {
+            id: propertyId
+        },
+        data: {
+            feature
+        },
+        select: {
+            id: true,
+            landLordId: true,
+            pName: true,
+            pLocation: true,
+            pPrice: true,
+            pDescription: true,
+            feature: true,
+            availability: true,
+            createdAt: true,
+            updatedAt: true
+        }
+    });
+
+    return result;
+};
+
 export const adminService={
     getAllUsers,
     updateUserStatus,
     getAllProperties,
+    updatePropertyFeature,
     getAllRentalRequests
 }

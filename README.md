@@ -428,6 +428,7 @@ Public registration only accepts `TENANT` and `LANDLORD`; an `ADMIN` account can
 | Admin           | `GET`    | `/api/admin/users`             | Admin                   |
 | Admin           | `PATCH`  | `/api/admin/users/:id`         | Admin                   |
 | Admin           | `GET`    | `/api/admin/properties`        | Admin                   |
+| Admin           | `PATCH`  | `/api/admin/properties/:id`    | Admin                   |
 | Admin           | `GET`    | `/api/admin/rentals`           | Admin                   |
 
 ## Endpoint reference
@@ -1045,9 +1046,37 @@ Updates a user's account status. A blocked user cannot log in or access protecte
 
 #### `GET /api/admin/properties`
 
-Returns platform-wide property records with `id`, `landLordId`, name, location, price, description, and creation time.
+Returns platform-wide property records with `id`, `landLordId`, name, location, price, description, `feature`, and creation time.
 
 **Authentication:** `ADMIN`
+
+### Update property feature status
+
+#### `PATCH /api/admin/properties/:id`
+
+Toggles or sets the `feature` status of a property to `true` or `false`.
+
+**Authentication:** `ADMIN`
+
+**Path parameter:** `id` is the property UUID.
+
+**Request body**
+
+| Field     | Type    | Required | Description                                     |
+| --------- | ------- | -------- | ----------------------------------------------- |
+| `feature` | boolean | Yes      | `true` to mark as featured, `false` to unmark. |
+
+**Example request**
+
+```json
+{
+  "feature": true
+}
+```
+
+**Success response (`200`)** returns the updated property record with its new `feature` boolean status.
+
+**Common errors:** `400` invalid boolean value, `401` unauthorized, `403` non-admin role, `404` property not found.
 
 ### List all rental requests
 

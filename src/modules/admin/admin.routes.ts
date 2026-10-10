@@ -13,6 +13,8 @@ router.patch("/users/:id",auth("ADMIN"),adminController.updateUserStatus)
 
 router.get("/properties",auth("ADMIN"),adminController.getAllProperties)
 
+router.patch("/properties/:id",auth("ADMIN"),adminController.updatePropertyFeature)
+
 router.get("/rentals",auth("ADMIN"),adminController.getAllRentalRequests)
 
 export const adminRoute=router;

@@ -52,7 +52,11 @@ const getRentalRequestById = catchAsync(async (req: Request, res: Response) => {
     throw new AppError("User Id not found..Please login first", httpStatus.UNAUTHORIZED);
   }
 
-  const result = await rentalRequestService.getRentalRequestByIdFromDB(tenantId, id);
+  if (!id) {
+    throw new AppError("Rental request ID is required", httpStatus.BAD_REQUEST);
+  }
+
+  const result = await rentalRequestService.getRentalRequestByIdFromDB(tenantId, id as string);
 
   sendResponse(res, {
     success: true,
