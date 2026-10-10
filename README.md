@@ -405,10 +405,12 @@ Public registration only accepts `TENANT` and `LANDLORD`; an `ADMIN` account can
 | Health          | `GET`    | `/`                            | Public                  |
 | Authentication  | `POST`   | `/api/auth/register`           | Public                  |
 | Authentication  | `POST`   | `/api/auth/login`              | Public                  |
+| Authentication  | `POST`   | `/api/auth/refresh-token`      | Public (Requires token) |
 | Authentication  | `GET`    | `/api/auth/me`                 | Any authenticated role  |
 | Properties      | `GET`    | `/api/properties`              | Public                  |
 | Properties      | `GET`    | `/api/properties/:id`          | Public                  |
 | Categories      | `GET`    | `/api/categories`              | Public                  |
+| Landlord        | `GET`    | `/api/landlord/properties`     | Landlord                |
 | Landlord        | `POST`   | `/api/landlord/properties`     | Landlord                |
 | Landlord        | `PUT`    | `/api/landlord/properties/:id` | Property owner landlord |
 | Landlord        | `DELETE` | `/api/landlord/properties/:id` | Property owner landlord |
@@ -544,9 +546,48 @@ Authenticates a user and returns access and refresh tokens. It also attempts to 
 }
 ```
 
-The access token expires after **1 day** and the refresh token after **7 days**. A refresh-token endpoint is not implemented in the current API, so the client must log in again when an access token expires.
+The access token expires after **1 day** and the refresh token after **7 days**. When the access token expires, clients can request a new access token using the `/api/auth/refresh-token` endpoint without requiring the user to re-enter credentials.
 
 **Common errors:** `401` invalid password, `403` blocked account, `404` email not found.
+
+### Refresh access token
+
+#### `POST /api/auth/refresh-token`
+
+Issues a new access token using a valid refresh token. The endpoint accepts the refresh token via HTTP-only cookie (`refreshToken`), request JSON body (`refreshToken`), or the `Authorization` header (`Bearer <refreshToken>`).
+
+**Authentication:** none (requires valid refresh token)
+
+**Request body (optional if sent via cookie or header)**
+
+| Field          | Type   | Required | Description                                                         |
+| -------------- | ------ | -------- | ------------------------------------------------------------------- |
+| `refreshToken` | string | No*      | Refresh token string (*required if not provided in cookie/header).  |
+
+**Example request**
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Success response (`200`)**
+
+```json
+{
+  "success": true,
+  "status": 200,
+  "message": "Access token refreshed successfully",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+Sets a new `accessToken` cookie and returns the fresh access token in the response data.
+
+**Common errors:** `400` refresh token not provided, `401` invalid or expired refresh token, `403` account blocked, `404` user not found.
 
 ### Get the current user
 
@@ -574,11 +615,11 @@ Returns all properties. Filters may be combined; each supplied filter must match
 
 **Query parameters**
 
-| Parameter  | Type   | Required | Description                                                 |
-| ---------- | ------ | -------- | ----------------------------------------------------------- |
-| `location` | string | No       | Case-insensitive partial match against `pLocation`.         |
-| `price`    | number | No       | Exact property price.                                       |
-| `type`     | string | No       | Property category type. Values are normalized to uppercase. |
+| Parameter  | Type   | Required | Description                                                                        |
+| ---------- | ------ | -------- | ---------------------------------------------------------------------------------- |
+| `location` | string | No       | Case-insensitive partial match against `pLocation`.                                |
+| `price`    | number | No       | Target price. Filters properties within a ±15% tolerance range (`minPrice` to `maxPrice`). |
+| `type`     | string | No       | Property category type. Values are normalized to uppercase.                        |
 
 **Examples**
 
@@ -588,15 +629,18 @@ GET /api/properties?location=dhaka
 GET /api/properties?price=25000&type=APARTMENT
 ```
 
-For the property-list endpoint, each item contains summary data only: `id`, `availability`, `pName`, `pLocation`, `pPrice`, `createdAt`, and the category's `id` and `type`. It intentionally does not return the landlord ID, property description, image, or category description. Use `GET /api/properties/:id` to retrieve the full property record.
+For the property-list endpoint, each item contains summary data: `id`, `landLordId`, `availability`, `pName`, `pLocation`, `pPrice`, `pImage`, `feature`, `createdAt`, and the category's `id` and `type`. Use `GET /api/properties/:id` to retrieve the full property record including description and detailed category information.
 
 ```json
 {
   "id": "property-uuid",
+  "landLordId": "landlord-uuid",
   "availability": "AVAILABLE",
   "pName": "Lakeview Apartment",
   "pLocation": "Gulshan, Dhaka",
   "pPrice": "25000",
+  "pImage": "https://example.com/property.jpg",
+  "feature": false,
   "category": {
     "id": "category-uuid",
     "type": "APARTMENT"
@@ -632,6 +676,18 @@ Returns every category record in the database. A category belongs to one propert
 ## Landlord endpoints
 
 All endpoints in this section require a valid landlord access token.
+
+### Get landlord properties
+
+#### `GET /api/landlord/properties`
+
+Returns all properties created by and belonging to the authenticated landlord, including category, availability, and featured status.
+
+**Authentication:** `LANDLORD`
+
+**Request body:** none
+
+**Success response (`200`)** returns an array of the landlord's properties.
 
 ### Create a property
 
@@ -786,7 +842,7 @@ Returns every rental request created by the authenticated tenant, newest first.
 
 **Authentication:** `TENANT`
 
-Each item includes `id`, `propertyId`, `tenantId`, `status`, and `createdAt`.
+Each item includes `id`, `propertyId`, `tenantId`, `message`, `status`, `createdAt`, and the associated `property` object (`id`, `pName`, `pLocation`, `pPrice`, `pImage`).
 
 **Common errors:** `404` when the tenant has no rental requests.
 
@@ -884,7 +940,7 @@ Returns payment records for the authenticated user's own account, newest first.
 
 **Authentication:** `TENANT` or `LANDLORD`
 
-Each history item contains `id`, `amount`, `status`, and `createdAt`.
+Each history item contains `id`, `amount`, `status`, `createdAt`, and the associated `rentalRequest` with property details (`id`, `pName`, `pLocation`).
 
 ### Get payment details
 
@@ -1067,8 +1123,8 @@ This project includes pre-configured Vercel deployment files (`vercel.json` and 
 
 ## Current limitations and future improvements
 
-- There is no logout endpoint or token-refresh endpoint yet.
-- There is no pagination, sorting, or price-range search for properties yet; the price filter is an exact match.
+- There is no logout endpoint yet.
+- There is no pagination or sorting for properties yet; price filtering operates with a ±15% range around the requested target price.
 - Request payloads rely primarily on Prisma/database validation; adding a schema validator such as Zod would provide clearer field-level errors.
 - The API currently has no automated test suite.
 - For cross-site cookie authentication in production, ensure the login-cookie configuration uses `secure: true` over HTTPS. Clients can always use the documented `Authorization: Bearer <token>` header.
