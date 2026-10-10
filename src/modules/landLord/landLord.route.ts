@@ -9,7 +9,7 @@ router.get("/properties", auth("LANDLORD"), landLordController.getLandlordProper
 
 router.post("/properties", auth("LANDLORD") ,landLordController.createProperty)
 
-router.put("/properties/:id",auth("LANDLORD"),landLordController.updateProperty)
+router.put("/properties/:id",auth("LANDLORD","ADMIN"),landLordController.updateProperty)
 
 router.delete("/properties/:id",auth("LANDLORD"),landLordController.deleteProperty)
 

@@ -794,27 +794,34 @@ var deletePropertyFromDB = async (userId, id) => {
   });
 };
 var rentalRequestsForLandLordsPropertiesFromDB = async (landLordId) => {
-  const properties = await prisma.property.findMany({
+  const rentalRequests = await prisma.rentalRequest.findMany({
     where: {
-      landLordId
+      property: {
+        landLordId
+      }
     },
-    select: {
-      rentalRequest: {
+    include: {
+      property: {
         select: {
           id: true,
-          propertyId: true,
-          tenantId: true,
-          message: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true
+          pName: true,
+          pLocation: true,
+          pPrice: true
+        }
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true
         }
       }
+    },
+    orderBy: {
+      createdAt: "desc"
     }
   });
-  const rentalRequests = properties.flatMap(
-    (property) => property.rentalRequest
-  );
   return rentalRequests;
 };
 var approveOrRejectRentalRequestInDB = async (userId, rentalRequestId, payload) => {
@@ -831,7 +838,10 @@ var approveOrRejectRentalRequestInDB = async (userId, rentalRequestId, payload) 
     }
   });
   if (rentalRequest.property.landLordId !== userId) {
-    throw new AppError("You are not authorized to approve or reject this rental request as you are not the owner of this property", httpStatus4.FORBIDDEN);
+    throw new AppError(
+      "You are not authorized to approve or reject this rental request as you are not the owner of this property",
+      httpStatus4.FORBIDDEN
+    );
   }
   const result = await prisma.rentalRequest.update({
     where: {
@@ -843,12 +853,28 @@ var approveOrRejectRentalRequestInDB = async (userId, rentalRequestId, payload) 
   });
   return result;
 };
+var getLandlordPropertiesFromDB = async (landLordId) => {
+  const result = await prisma.property.findMany({
+    where: {
+      landLordId
+    },
+    include: {
+      category: true,
+      rentalRequest: true
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+  return result;
+};
 var landLordService = {
   createPropertyIntoDB,
   updatePropertyInDB,
   deletePropertyFromDB,
   rentalRequestsForLandLordsPropertiesFromDB,
-  approveOrRejectRentalRequestInDB
+  approveOrRejectRentalRequestInDB,
+  getLandlordPropertiesFromDB
 };
 
 // src/modules/landLord/landLord.controller.ts
@@ -977,16 +1003,36 @@ var approveOrRejectRentalRequest = catchAsync(
     });
   }
 );
+var getLandlordProperties = catchAsync(
+  async (req, res, next) => {
+    const landLordId = req.user?.userId;
+    if (!landLordId) {
+      throw new AppError(
+        "User Id not found..Please login first",
+        httpStatus5.UNAUTHORIZED
+      );
+    }
+    const result = await landLordService.getLandlordPropertiesFromDB(landLordId);
+    sendResponse_default(res, {
+      success: true,
+      status: 200,
+      message: "Landlord properties fetched successfully",
+      data: result
+    });
+  }
+);
 var landLordController = {
   createProperty,
   updateProperty,
   deleteProperty,
   rentalRequestsForLandLordsProperties,
-  approveOrRejectRentalRequest
+  approveOrRejectRentalRequest,
+  getLandlordProperties
 };
 
 // src/modules/landLord/landLord.route.ts
 var router2 = Router2();
+router2.get("/properties", auth("LANDLORD"), landLordController.getLandlordProperties);
 router2.post("/properties", auth("LANDLORD"), landLordController.createProperty);
 router2.put("/properties/:id", auth("LANDLORD"), landLordController.updateProperty);
 router2.delete("/properties/:id", auth("LANDLORD"), landLordController.deleteProperty);
@@ -1035,6 +1081,7 @@ var getAllPropertiesFromDB = async (filterQuery) => {
     },
     select: {
       id: true,
+      landLordId: true,
       availability: true,
       pName: true,
       pLocation: true,
@@ -1184,8 +1231,18 @@ var getAllRentalRequestsFromDB = async (userId) => {
       id: true,
       propertyId: true,
       tenantId: true,
+      message: true,
       status: true,
-      createdAt: true
+      createdAt: true,
+      property: {
+        select: {
+          id: true,
+          pName: true,
+          pLocation: true,
+          pPrice: true,
+          pImage: true
+        }
+      }
     },
     orderBy: {
       createdAt: "desc"
@@ -1229,71 +1286,50 @@ var rentalRequestService = {
 
 // src/modules/rentalRequest/rentalRequest.controller.ts
 import httpStatus10 from "http-status";
-var createRentalRequest = catchAsync(
-  async (req, res, next) => {
-    const tenantId = req.user?.userId;
-    if (!tenantId) {
-      throw new AppError("Tenant Id not found", httpStatus10.NOT_FOUND);
-    }
-    const payload = req.body;
-    if (!payload) {
-      throw new AppError("Request body is required", httpStatus10.BAD_REQUEST);
-    }
-    if (!payload.propertyId) {
-      throw new AppError("Property ID not provided. It is required.", httpStatus10.BAD_REQUEST);
-    }
-    const result = await rentalRequestService.createRentalRequestInDB(
-      tenantId,
-      payload
-    );
-    sendResponse_default(res, {
-      success: true,
-      status: 200,
-      message: "Rental request created successfully",
-      data: result
-    });
+var createRentalRequest = catchAsync(async (req, res) => {
+  const tenantId = req.user?.userId;
+  const payload = req.body;
+  if (!tenantId) {
+    throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
   }
-);
-var getAllRentalRequests = catchAsync(
-  async (req, res, next) => {
-    const userId = req.user?.userId;
-    if (!userId) {
-      throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
-    }
-    const result = await rentalRequestService.getAllRentalRequestsFromDB(userId);
-    sendResponse_default(res, {
-      success: true,
-      status: 200,
-      message: "Rental requests fetched successfully",
-      data: result
-    });
+  if (!payload?.propertyId) {
+    throw new AppError("Property ID is required", httpStatus10.BAD_REQUEST);
   }
-);
-var getRentalRequestById = catchAsync(
-  async (req, res, next) => {
-    const id = req.params?.id;
-    const userId = req.user?.userId;
-    if (!userId) {
-      throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
-    }
-    if (!id) {
-      throw new AppError(
-        "Rental request ID is required..Provide in in the URL",
-        httpStatus10.BAD_REQUEST
-      );
-    }
-    const result = await rentalRequestService.getRentalRequestByIdFromDB(
-      userId,
-      id
-    );
-    sendResponse_default(res, {
-      success: true,
-      status: 200,
-      message: "Rental request fetched successfully",
-      data: result
-    });
+  const result = await rentalRequestService.createRentalRequestInDB(tenantId, payload);
+  sendResponse_default(res, {
+    success: true,
+    status: 201,
+    message: "Rental request created successfully",
+    data: result
+  });
+});
+var getAllRentalRequests = catchAsync(async (req, res) => {
+  const tenantId = req.user?.userId;
+  if (!tenantId) {
+    throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
   }
-);
+  const result = await rentalRequestService.getAllRentalRequestsFromDB(tenantId);
+  sendResponse_default(res, {
+    success: true,
+    status: 200,
+    message: "Rental requests fetched successfully",
+    data: result
+  });
+});
+var getRentalRequestById = catchAsync(async (req, res) => {
+  const tenantId = req.user?.userId;
+  const { id } = req.params;
+  if (!tenantId) {
+    throw new AppError("User Id not found..Please login first", httpStatus10.UNAUTHORIZED);
+  }
+  const result = await rentalRequestService.getRentalRequestByIdFromDB(tenantId, id);
+  sendResponse_default(res, {
+    success: true,
+    status: 200,
+    message: "Rental request fetched successfully",
+    data: result
+  });
+});
 var rentalRequestController = {
   createRentalRequest,
   getAllRentalRequests,
@@ -1456,7 +1492,19 @@ var getPaymentHistoryFromDB = async (id) => {
       userId: true,
       amount: true,
       status: true,
-      createdAt: true
+      createdAt: true,
+      rentalRequest: {
+        select: {
+          id: true,
+          property: {
+            select: {
+              id: true,
+              pName: true,
+              pLocation: true
+            }
+          }
+        }
+      }
     },
     orderBy: {
       createdAt: "desc"

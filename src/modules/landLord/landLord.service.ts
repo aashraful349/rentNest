@@ -12,7 +12,7 @@ const createPropertyIntoDB = async (
   payload: CreatePropertyPayload,
   landLordId: string,
 ) => {
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description } =
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } =
     payload;
 
   const normalizedType = type?.trim().toUpperCase() as PType;
@@ -47,6 +47,7 @@ const createPropertyIntoDB = async (
       pPrice: true,
       pDescription: true,
       pImage: true,
+      feature: true,
       category: {
         select: {
           id: true,
@@ -73,14 +74,17 @@ const updatePropertyInDB = async (
     },
   });
 
-  if (landLordId.landLordId != req.user?.userId) {
+  const isOwner = landLordId.landLordId === req.user?.userId;
+  const isAdmin = req.user?.role?.toUpperCase() === "ADMIN";
+
+  if (!isOwner && !isAdmin) {
     throw new AppError(
       "You are not the owner of this property.So, you are not authorized to update this property.",
       httpStatus.FORBIDDEN
     );
   }
 
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description } =
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } =
     payload;
 
   const currentProperty = await prisma.property.findUniqueOrThrow({
@@ -102,6 +106,7 @@ const updatePropertyInDB = async (
       pPrice: pPrice ? pPrice : currentProperty.pPrice,
       pDescription: pDescription ? pDescription : currentProperty.pDescription,
       pImage: pImage ? pImage : currentProperty.pImage,
+      feature: feature !== undefined ? feature : currentProperty.feature,
       category: {
         update: {
           type: type ? type : currentProperty.category?.type,
@@ -119,6 +124,7 @@ const updatePropertyInDB = async (
       pPrice: true,
       pDescription: true,
       pImage: true,
+      feature: true,
       category: {
         select: {
           id: true,
