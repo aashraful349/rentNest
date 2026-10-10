@@ -262,6 +262,10 @@ var PType = {
   LAND: "LAND",
   OTHER: "OTHER"
 };
+var PAvailability = {
+  AVAILABLE: "AVAILABLE",
+  UNAVAILABLE: "UNAVAILABLE"
+};
 
 // generated/prisma/client.ts
 globalThis["__dirname"] = path.dirname(fileURLToPath(import.meta.url));
@@ -669,7 +673,7 @@ import { Router as Router2 } from "express";
 // src/modules/landLord/landLord.service.ts
 import httpStatus4 from "http-status";
 var createPropertyIntoDB = async (payload, landLordId) => {
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } = payload;
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description } = payload;
   const normalizedType = type?.trim().toUpperCase();
   const pType = Object.values(PType);
   if (!pType.includes(normalizedType)) {
@@ -701,6 +705,7 @@ var createPropertyIntoDB = async (payload, landLordId) => {
       pPrice: true,
       pDescription: true,
       pImage: true,
+      availability: true,
       feature: true,
       category: {
         select: {
@@ -730,7 +735,18 @@ var updatePropertyInDB = async (req, id, payload) => {
       httpStatus4.FORBIDDEN
     );
   }
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } = payload;
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, availability } = payload;
+  let normalizedAvailability;
+  if (availability) {
+    const formatted = availability.trim().toUpperCase();
+    if (!Object.values(PAvailability).includes(formatted)) {
+      throw new AppError(
+        "Invalid availability value. Must be 'AVAILABLE' or 'UNAVAILABLE'.",
+        httpStatus4.BAD_REQUEST
+      );
+    }
+    normalizedAvailability = formatted;
+  }
   const currentProperty = await prisma.property.findUniqueOrThrow({
     where: {
       id
@@ -749,7 +765,7 @@ var updatePropertyInDB = async (req, id, payload) => {
       pPrice: pPrice ? pPrice : currentProperty.pPrice,
       pDescription: pDescription ? pDescription : currentProperty.pDescription,
       pImage: pImage ? pImage : currentProperty.pImage,
-      feature: feature !== void 0 ? feature : currentProperty.feature,
+      availability: normalizedAvailability ? normalizedAvailability : currentProperty.availability,
       category: {
         update: {
           type: type ? type : currentProperty.category?.type,
@@ -765,6 +781,7 @@ var updatePropertyInDB = async (req, id, payload) => {
       pPrice: true,
       pDescription: true,
       pImage: true,
+      availability: true,
       feature: true,
       category: {
         select: {
@@ -1040,6 +1057,7 @@ var router2 = Router2();
 router2.get("/properties", auth("LANDLORD"), landLordController.getLandlordProperties);
 router2.post("/properties", auth("LANDLORD"), landLordController.createProperty);
 router2.put("/properties/:id", auth("LANDLORD"), landLordController.updateProperty);
+router2.patch("/properties/:id", auth("LANDLORD"), landLordController.updateProperty);
 router2.delete("/properties/:id", auth("LANDLORD"), landLordController.deleteProperty);
 router2.get("/requests", auth("LANDLORD"), landLordController.rentalRequestsForLandLordsProperties);
 router2.patch("/requests/:id", auth("LANDLORD"), landLordController.approveOrRejectRentalRequest);

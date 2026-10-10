@@ -11,6 +11,8 @@ router.post("/properties", auth("LANDLORD") ,landLordController.createProperty)
 
 router.put("/properties/:id",auth("LANDLORD"),landLordController.updateProperty)
 
+router.patch("/properties/:id",auth("LANDLORD"),landLordController.updateProperty)
+
 router.delete("/properties/:id",auth("LANDLORD"),landLordController.deleteProperty)
 
 router.get("/requests",auth("LANDLORD"),landLordController.rentalRequestsForLandLordsProperties)

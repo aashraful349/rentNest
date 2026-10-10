@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PType, Status } from "../../../generated/prisma/enums";
+import { PAvailability, PType, Status } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import {
   CreatePropertyPayload,
@@ -12,7 +12,7 @@ const createPropertyIntoDB = async (
   payload: CreatePropertyPayload,
   landLordId: string,
 ) => {
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } =
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description } =
     payload;
 
   const normalizedType = type?.trim().toUpperCase() as PType;
@@ -47,6 +47,7 @@ const createPropertyIntoDB = async (
       pPrice: true,
       pDescription: true,
       pImage: true,
+      availability: true,
       feature: true,
       category: {
         select: {
@@ -84,8 +85,20 @@ const updatePropertyInDB = async (
     );
   }
 
-  const { pName, pLocation, pPrice, pDescription, pImage, type, description, feature } =
+  const { pName, pLocation, pPrice, pDescription, pImage, type, description, availability } =
     payload;
+
+  let normalizedAvailability: PAvailability | undefined;
+  if (availability) {
+    const formatted = availability.trim().toUpperCase() as PAvailability;
+    if (!Object.values(PAvailability).includes(formatted)) {
+      throw new AppError(
+        "Invalid availability value. Must be 'AVAILABLE' or 'UNAVAILABLE'.",
+        httpStatus.BAD_REQUEST,
+      );
+    }
+    normalizedAvailability = formatted;
+  }
 
   const currentProperty = await prisma.property.findUniqueOrThrow({
     where: {
@@ -106,7 +119,7 @@ const updatePropertyInDB = async (
       pPrice: pPrice ? pPrice : currentProperty.pPrice,
       pDescription: pDescription ? pDescription : currentProperty.pDescription,
       pImage: pImage ? pImage : currentProperty.pImage,
-      feature: feature !== undefined ? feature : currentProperty.feature,
+      availability: normalizedAvailability ? normalizedAvailability : currentProperty.availability,
       category: {
         update: {
           type: type ? type : currentProperty.category?.type,
@@ -124,6 +137,7 @@ const updatePropertyInDB = async (
       pPrice: true,
       pDescription: true,
       pImage: true,
+      availability: true,
       feature: true,
       category: {
         select: {

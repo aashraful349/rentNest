@@ -412,7 +412,7 @@ Public registration only accepts `TENANT` and `LANDLORD`; an `ADMIN` account can
 | Categories      | `GET`    | `/api/categories`              | Public                  |
 | Landlord        | `GET`    | `/api/landlord/properties`     | Landlord                |
 | Landlord        | `POST`   | `/api/landlord/properties`     | Landlord                |
-| Landlord        | `PUT`    | `/api/landlord/properties/:id` | Property owner landlord |
+| Landlord        | `PUT` / `PATCH` | `/api/landlord/properties/:id` | Property owner landlord |
 | Landlord        | `DELETE` | `/api/landlord/properties/:id` | Property owner landlord |
 | Landlord        | `GET`    | `/api/landlord/requests`       | Landlord                |
 | Landlord        | `PATCH`  | `/api/landlord/requests/:id`   | Owner landlord          |
@@ -728,19 +728,20 @@ Creates a property owned by the logged-in landlord and creates its category at t
 
 ### Update a property
 
-#### `PUT /api/landlord/properties/:id`
+#### `PUT /api/landlord/properties/:id` or `PATCH /api/landlord/properties/:id`
 
-Updates fields on a property owned by the logged-in landlord. Any omitted field keeps its previous value.
+Updates fields on a property owned by the logged-in landlord. Any omitted field keeps its previous value. Supports updating `availability` (`AVAILABLE` or `UNAVAILABLE`). The `feature` flag cannot be updated here (managed by admin only).
 
 **Authentication:** `LANDLORD`, and the landlord must own `:id`
 
 **Path parameter:** `id` is the property UUID.
 
-**Request body:** any subset of the create-property fields.
+**Request body:** any subset of property fields, including `availability`:
 
 ```json
 {
   "pPrice": 27000,
+  "availability": "UNAVAILABLE",
   "pDescription": "Newly renovated furnished two-bedroom apartment.",
   "type": "APARTMENT"
 }

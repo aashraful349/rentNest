@@ -1,4 +1,4 @@
-import { PType } from "../../../generated/prisma/enums";
+import { PAvailability, PType } from "../../../generated/prisma/enums";
 
 export type CreatePropertyPayload = {
   pName: string;
@@ -8,7 +8,6 @@ export type CreatePropertyPayload = {
   pImage?: string;
   type :PType;
   description?:string;
-  feature?:boolean;
 };
 
 export type updatePropertyPayload = {
@@ -19,5 +18,5 @@ export type updatePropertyPayload = {
   pImage?: string;
   type ?:PType;
   description?:string;
-  feature?:boolean;
+  availability?: PAvailability;
 };
