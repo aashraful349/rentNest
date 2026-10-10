@@ -43,8 +43,18 @@ const getAllRentalRequestsFromDB = async (userId: string) => {
       id: true,
       propertyId: true,
       tenantId: true,
+      message: true,
       status: true,
       createdAt: true,
+      property: {
+        select: {
+          id: true,
+          pName: true,
+          pLocation: true,
+          pPrice: true,
+          pImage: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

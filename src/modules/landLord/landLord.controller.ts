@@ -176,10 +176,32 @@ const approveOrRejectRentalRequest = catchAsync(
   },
 );
 
+const getLandlordProperties = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const landLordId = req.user?.userId as string;
+    if (!landLordId) {
+      throw new AppError(
+        "User Id not found..Please login first",
+        httpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const result = await landLordService.getLandlordPropertiesFromDB(landLordId);
+
+    sendResponse(res, {
+      success: true,
+      status: 200,
+      message: "Landlord properties fetched successfully",
+      data: result,
+    });
+  },
+);
+
 export const landLordController = {
   createProperty,
   updateProperty,
   deleteProperty,
   rentalRequestsForLandLordsProperties,
   approveOrRejectRentalRequest,
+  getLandlordProperties,
 };

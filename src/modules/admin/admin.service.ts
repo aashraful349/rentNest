@@ -98,5 +98,4 @@ export const adminService={
     updateUserStatus,
     getAllProperties,
     getAllRentalRequests
-
 }

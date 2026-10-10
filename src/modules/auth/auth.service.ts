@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { LoginUserPayload, RegisterUserPayload } from "./auth.interface";
 import config from "../../config";
 import { ActiveStatus, Role } from "../../../generated/prisma/enums";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { jwtUtils } from "../../utility/jwtUtils";
 import { AppError } from "../../utility/AppError";
 import httpStatus from "http-status";
@@ -144,8 +144,46 @@ const getMeFromDB = async (userId: string) => {
   return user;
 };
 
+const refreshTokenService = async (token: string) => {
+  const jwtRefreshSecret = config.jwt_refresh_secret as string;
+  const decodedToken = jwtUtils.compareTokenResult(token, jwtRefreshSecret);
+  if (!decodedToken.success) {
+    throw new AppError(
+      "Invalid or expired refresh token. Please login again.",
+      httpStatus.UNAUTHORIZED,
+    );
+  }
+  const userData = decodedToken.data as JwtPayload;
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userData.userId,
+    },
+  });
+  if (!user) {
+    throw new AppError("User not found", httpStatus.NOT_FOUND);
+  }
+  if (user.activeStatus === ActiveStatus.BLOCKED) {
+    throw new AppError(
+      "User is blocked. Please contact support.",
+      httpStatus.FORBIDDEN,
+    );
+  }
+  const jwtPayload = {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+  const jwtAccessSecret = config.jwt_access_secret as string;
+  const accessToken = jwtUtils.createToken(jwtPayload, jwtAccessSecret, {
+    expiresIn: "1d",
+  });
+  return { accessToken };
+};
+
 export const authService = {
   registerUserDB,
   loginUserFromDB,
   getMeFromDB,
+  refreshTokenService,
 };

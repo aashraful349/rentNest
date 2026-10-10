@@ -131,6 +131,18 @@ const getPaymentHistoryFromDB=async(id:string)=>{
       amount:true,
       status:true,
       createdAt:true,
+      rentalRequest: {
+        select: {
+          id: true,
+          property: {
+            select: {
+              id: true,
+              pName: true,
+              pLocation: true,
+            },
+          },
+        },
+      },
     },
     orderBy:{
       createdAt:"desc"

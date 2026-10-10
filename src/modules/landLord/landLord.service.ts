@@ -64,9 +64,6 @@ const updatePropertyInDB = async (
   id: string,
   payload: updatePropertyPayload,
 ) => {
-  // console.log("id:",id)
-  // console.log("payload:",payload)
-
   const landLordId = await prisma.property.findUniqueOrThrow({
     where: {
       id,
@@ -75,8 +72,6 @@ const updatePropertyInDB = async (
       landLordId: true,
     },
   });
-
-  // console.log(landLordId.landLordId)
 
   if (landLordId.landLordId != req.user?.userId) {
     throw new AppError(
@@ -138,7 +133,7 @@ const updatePropertyInDB = async (
 };
 
 const deletePropertyFromDB = async (userId: string, id: string) => {
-  const result=await prisma.property.findUniqueOrThrow({
+  const result = await prisma.property.findUniqueOrThrow({
     where: {
       id,
     },
@@ -163,66 +158,95 @@ const deletePropertyFromDB = async (userId: string, id: string) => {
 const rentalRequestsForLandLordsPropertiesFromDB = async (
   landLordId: string,
 ) => {
-  const properties = await prisma.property.findMany({
+  const rentalRequests = await prisma.rentalRequest.findMany({
     where: {
-      landLordId,
+      property: {
+        landLordId,
+      },
     },
-    select: {
-      rentalRequest: {
+    include: {
+      property: {
         select: {
           id: true,
-          propertyId: true,
-          tenantId: true,
-          message: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
+          pName: true,
+          pLocation: true,
+          pPrice: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return rentalRequests;
+};
+
+const approveOrRejectRentalRequestInDB = async (
+  userId: string,
+  rentalRequestId: string,
+  payload: Status
+) => {
+  const rentalRequest = await prisma.rentalRequest.findUniqueOrThrow({
+    where: {
+      id: rentalRequestId,
+    },
+    select: {
+      property: {
+        select: {
+          landLordId: true,
         },
       },
     },
   });
 
-  const rentalRequests = properties.flatMap(
-    (property) => property.rentalRequest,
-  );
-  return rentalRequests;
-};
-
-const approveOrRejectRentalRequestInDB = async(userId:string,rentalRequestId:string,payload:Status)=>{
-
-  const rentalRequest=await prisma.rentalRequest.findUniqueOrThrow({
-    where:{
-      id:rentalRequestId
-    },
-    select:{
-      property:{
-        select:{
-          landLordId:true
-        }
-      }
-    }
-  })
-
-  if(rentalRequest.property.landLordId!==userId){
-    throw new AppError("You are not authorized to approve or reject this rental request as you are not the owner of this property", httpStatus.FORBIDDEN);
+  if (rentalRequest.property.landLordId !== userId) {
+    throw new AppError(
+      "You are not authorized to approve or reject this rental request as you are not the owner of this property",
+      httpStatus.FORBIDDEN
+    );
   }
 
-  const result=await prisma.rentalRequest.update({
-    where:{
-      id:rentalRequestId
+  const result = await prisma.rentalRequest.update({
+    where: {
+      id: rentalRequestId,
     },
-    data:{
-      status:payload
-    }
-  })
-  // console.log("result:",result)
+    data: {
+      status: payload,
+    },
+  });
   return result;
-}
+};
+
+const getLandlordPropertiesFromDB = async (landLordId: string) => {
+  const result = await prisma.property.findMany({
+    where: {
+      landLordId,
+    },
+    include: {
+      category: true,
+      rentalRequest: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return result;
+};
 
 export const landLordService = {
   createPropertyIntoDB,
   updatePropertyInDB,
   deletePropertyFromDB,
   rentalRequestsForLandLordsPropertiesFromDB,
-  approveOrRejectRentalRequestInDB
+  approveOrRejectRentalRequestInDB,
+  getLandlordPropertiesFromDB,
 };

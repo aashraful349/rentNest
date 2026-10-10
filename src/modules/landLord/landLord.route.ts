@@ -5,6 +5,8 @@ import { auth } from "../../middleware/auth";
 
 const router=Router();
 
+router.get("/properties", auth("LANDLORD"), landLordController.getLandlordProperties)
+
 router.post("/properties", auth("LANDLORD") ,landLordController.createProperty)
 
 router.put("/properties/:id",auth("LANDLORD"),landLordController.updateProperty)

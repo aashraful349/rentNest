@@ -8,6 +8,7 @@ model Property {
   pPrice       Decimal  @db.Decimal(10, 2)
   pDescription String
   pImage       String?  @db.VarChar(255)
+  feature      Boolean? @default(false) 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
